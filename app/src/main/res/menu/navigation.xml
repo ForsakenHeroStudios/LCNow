@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--<item-->
+        <!--android:id="@+id/navigation_search"-->
+        <!--android:icon="@mipmap/search"-->
+        <!--android:title="" />-->
+
+    <item
+        android:id="@+id/navigation_today"
+        android:icon="@mipmap/today"
+        android:title="" />
+
+    <item
+        android:id="@+id/navigation_thismonth"
+        android:icon="@mipmap/thismonth"
+        android:title="" />
+
+    <item
+        android:id="@+id/navigation_groups"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:title="" />
+
+    <item
+        android:id="@+id/navigation_add_event"
+        android:icon="@mipmap/addevent"
+        android:title="" />
+
+</menu>
