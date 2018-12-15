@@ -34,3 +34,12 @@ Next steps
 - Integrate Moodle, Canvas? Some other service used by professors?
 - Let students create personal reminders, goals within the app, to be used as a planner as well?
 - Make it work on iOS...
+- Add a schedule for various locations on campus in use (gym, library rooms, classrooms) as well as a way to "reserve" them. Perhaps have the user enter where they are currently working, then have a persistent notification in the notification center that the user can tap on to say they leave/are done.
+- Have SQRC hours/who is currently working along with what they can help you with.
+- Perhaps have a section where people ask questions about stuff and someone can answer (people who answer are awarded Pio Points...?)
+- That same feature could be used to help form study groups
+- Perhaps give people Pio Points for reserving and closing reservations (with a certain number of max points per day) to incentivize people to study and also make the service more useful to others looking for an open room
+- Have a Pio Points leaderboard, give something to winners at the end of each semester (LC Now t-shirt?)
+- Need an online store page
+- option to watch an add and get Pio Points? (Do we let ourselves stoop that low?)
+- LC Now merch?
