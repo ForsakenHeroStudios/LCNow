@@ -36,7 +36,8 @@ public class MyReceiver extends BroadcastReceiver {
                 .setVibrate(new long[]{1000, 1000, 1000, 1000, 1000})
                 .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                 .setDefaults(Notification.DEFAULT_ALL)
-                .setContentIntent(pendingIntent);
+                .setContentIntent(pendingIntent)
+                .setFullScreenIntent(pendingIntent,true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder.setChannelId(CHANNEL_ID)
                     .setColorized(true);

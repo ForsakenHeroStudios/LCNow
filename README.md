@@ -8,7 +8,7 @@ Current functionality
 - Can display events for any day (with selection of day using a calendar view).
 - Search for a specific event (simply checks if description or title contains the string entered by the user).
 - Can format an email for you to send to Jason Feiner to request to add an event. The user fills in all fields, and tapping the request button takes the user to their email service of choice.
-- Long hold on an event to set a notification about that event to appear 1 hour prior to the event (not thoroughly tested).
+- Long hold on an event to set a heads-up notification about that event to appear one hour prior to the event.
 
 Current problems
 - Will not run on our old tablet (API 21, which is the minimum we will support). Something with the bottom navigation widget isn't supported. This shouldn't be a major issue, as we plan to move away from a bottom navigation UI to a grid-like view as more features are added.
@@ -18,7 +18,6 @@ Current problems
 - Keyboard is slow to close when tapping on other items or pressing enter, but this is most likely because we are using an emulator.
 
 Next steps
-- Make notifications more prominent (i.e. push instead of just appearing in notification center).
 - Allow the user to subscribe to certain groups or filters. Notifications for upcoming events in subscribed areas will automatically appear without the user manually selecting specific events.
 - Make it easier (or at least more efficient) to post events. We will need to learn more about Live Whale and how events are posted using it. We may need cloud services to hold user accounts and log into Live Whale, although a local SQL database could do the trick (in this case, we would probably just display the Live Whale web page within the app, and not worry about making our own UI for it).
 - Add meals tab for students to quickly view what will be served each day. 

@@ -70,7 +70,8 @@ public class EventAdapter extends RecyclerView.Adapter<EventHolder> {
                 AlarmManager alarmManager = (AlarmManager)App.getApplication().getSystemService(Context.ALARM_SERVICE);
 
                 alarmManager.set(AlarmManager.RTC_WAKEUP,  calendar.getTimeInMillis(), pendingIntent);
-//                alarmManager.set(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis()+3000, pendingIntent);
+
+//                alarmManager.set(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis()+2000, pendingIntent);
 //                NotificationCompat.Builder builder = new NotificationCompat.Builder(App.getContext(), CHANNEL_ID)
 //                        .setCategory(Notification.CATEGORY_EVENT)
 //                        .setContentTitle("Test title")
