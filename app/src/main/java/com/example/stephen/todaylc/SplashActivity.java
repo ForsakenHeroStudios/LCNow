@@ -116,6 +116,9 @@ public class SplashActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                    if (loc.equals("null")) {
+                        loc = "";
+                    }
 
                     String group = null;
                     try {
