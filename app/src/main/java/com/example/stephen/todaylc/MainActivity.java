@@ -1,25 +1,15 @@
 package com.example.stephen.todaylc;
 
 import android.app.Activity;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
 import android.support.design.internal.BottomNavigationMenuView;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.MenuView;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -39,7 +29,6 @@ import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
@@ -47,146 +36,53 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 
-import static com.example.stephen.todaylc.EventAdapter.CHANNEL_ID;
-
 public class MainActivity extends AppCompatActivity {
 
-    private static Context context;
+    // A list of cards with relevant event info
     private RecyclerView eventRecyclerView, searchRecyclerView;
-    private ConstraintLayout container;
+    // a list of all event groups
     private ListView groupListView;
     private EventAdapter eventAdapter;
     private ArrayAdapter<String> groupAdapter;
     private ArrayList<String> allGroups, groupsToShow;
     private ArrayList<Event> eventArrayList, eventArrayListToShow;
+    // calendar to select events occurring on a certain day that the user would like to be shown
     private CalendarView calendarView;
+    // current form of navigation between views
     private BottomNavigationView bottomNavigationView;
+    // button that sends the user from the request to add event page to an email service of their choice
     private Button requestButton;
+    // various text fields
     private EditText nameEdit, emailEdit, organizationEdit, editDescription, editDate, editTime, editLocation, titleEdit, searchEdit, groupEdit;
+    // date format to find which events should be displayed when a certain date is selected
     private final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
-    private String dae/*searchType*/;
+    // selected day
+    private String day;
     private LinearLayout searchLayout, linearLayoutMain, addEventLayout, groupViewLayout;
-//    private final String SEARCH_TYPE_GENERAL = "general";
-//    private final String SEARCH_TYPE_GROUP = "group";
-    private final String MAIL_TO = "sbaker@lclark.edu"; // change this to Jason's email
-
+    // the email to request to add an event is sent to this address
+    private final String MAIL_TO = "sbaker@lclark.edu"; // TODO: change this to Jason's email
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-//                case R.id.navigation_search:
-//                    setTitle("Search");
-//                    linearLayoutMain.setVisibility(View.INVISIBLE);
-//                    calendarView.setVisibility(View.INVISIBLE);
-//                    addEventLayout.setVisibility(View.INVISIBLE);
-//                    searchLayout.setVisibility(View.VISIBLE);
-//                    hideSoftKeyboard(MainActivity.this);
-//                    return true;
-                case R.id.navigation_today:
-                    setTitle("Today at LC");
-                    linearLayoutMain.setVisibility(View.INVISIBLE);
-                    calendarView.setVisibility(View.INVISIBLE);
-                    addEventLayout.setVisibility(View.INVISIBLE);
-                    searchLayout.setVisibility(View.VISIBLE);
-                    groupViewLayout.setVisibility(View.INVISIBLE);
-                    hideSoftKeyboard(MainActivity.this);
-//                    searchType = SEARCH_TYPE_GENERAL;
-//                    searchEdit.setHint("Find activities...");
-                    return true;
-                case R.id.navigation_thismonth:
-                    setTitle("Month view");
-                    linearLayoutMain.setVisibility(View.INVISIBLE);
-                    calendarView.setVisibility(View.VISIBLE);
-                    addEventLayout.setVisibility(View.INVISIBLE);
-                    searchLayout.setVisibility(View.INVISIBLE);
-                    groupViewLayout.setVisibility(View.INVISIBLE);
-                    hideSoftKeyboard(MainActivity.this);
-//                    searchType = SEARCH_TYPE_GENERAL;
-//                    searchEdit.setHint("Find activities...");
-                    return true;
-                case R.id.navigation_add_event:
-                    setTitle("Request to post an event");
-                    linearLayoutMain.setVisibility(View.INVISIBLE);
-                    calendarView.setVisibility(View.INVISIBLE);
-                    addEventLayout.setVisibility(View.VISIBLE);
-                    searchLayout.setVisibility(View.INVISIBLE);
-                    groupViewLayout.setVisibility(View.INVISIBLE);
-                    hideSoftKeyboard(MainActivity.this);
-//                    searchType = SEARCH_TYPE_GENERAL;
-                    return true;
-                case R.id.navigation_groups:
-                    setTitle("Find a group");
-                    linearLayoutMain.setVisibility(View.INVISIBLE);
-                    calendarView.setVisibility(View.INVISIBLE);
-                    addEventLayout.setVisibility(View.INVISIBLE);
-                    searchLayout.setVisibility(View.INVISIBLE);
-                    groupViewLayout.setVisibility(View.VISIBLE);
-                    hideSoftKeyboard(MainActivity.this);
-//                    searchType = SEARCH_TYPE_GROUP;
-//                    searchEdit.setHint("Search for a group...");
-                    return true;
-            }
-            return false;
+            return setSelectedView(item);
         }
     };
 
-    public static Context getAppContext() {
-        return MainActivity.context;
-    }
-
-    public void request(View v) {
-        String emailBody = "Hi Jason,\n\n" +
-                "I'm with "+organizationEdit.getText()+
-                " and we would like to add our event, "+titleEdit.getText()+
-                " to the LC events calendar." +
-                " It will take place at "+editLocation.getText()+
-                " on "+editDate.getText()+" at "+editTime.getText() + ". "+
-                "The description is below, and the image is attached.\n\n" +
-                "Thank you for your time,\n" +nameEdit.getText()+ "\n\n" +
-                editDescription.getText()+"\n\n" +
-                "Sent with the LC Now App";
-        String[] CC = {""};
-        hideSoftKeyboard(MainActivity.this);
-        Intent emailIntent = new Intent(Intent.ACTION_SEND);
-        emailIntent.setData(Uri.parse("mailto:"));
-        emailIntent.setType("text/plain");
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{MAIL_TO});
-        emailIntent.putExtra(Intent.EXTRA_CC, CC);
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Event posting request");
-        emailIntent.putExtra(Intent.EXTRA_TEXT, emailBody);
-        try {
-            startActivity(Intent.createChooser(emailIntent,"Send email"));
-            finish();
-        } catch (android.content.ActivityNotFoundException e) {
-            Toast.makeText(MainActivity.this, "No email client installed.", Toast.LENGTH_LONG).show();
-        }
-
-    }
     // for more good stuff with eventRecyclerView: https://medium.com/@droidbyme/android-recyclerview-fca74609725e
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        MainActivity.context = getApplicationContext();
 
-//        searchType = SEARCH_TYPE_GENERAL;
-
-        container = findViewById(R.id.container);
-        // not sure if this actually does anything
-        container.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                hideSoftKeyboard(MainActivity.this);
-            }
-        });
-
-        dae = SDF.format(new Date());
+        day = SDF.format(new Date());
 
         linearLayoutMain = findViewById(R.id.linearLayoutMain);
 
+        // add event initialization
         editDate = findViewById(R.id.editTextDate);
         editDescription = findViewById(R.id.editTextDescription);
         editLocation = findViewById(R.id.editTextLocation);
@@ -203,12 +99,15 @@ public class MainActivity extends AppCompatActivity {
                 hideSoftKeyboard(MainActivity.this);
             }
         });
+
+        //initialize bottom navigation view
         bottomNavigationView = findViewById(R.id.navigation);
-        // lets see if this works
+        bottomNavigationView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        // attempt to make bottom navigation appear neater
         for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
-            removeTextLabel(bottomNavigationView,bottomNavigationView.getMenu().getItem(i).getItemId());
+            removeTextLabel(bottomNavigationView, bottomNavigationView.getMenu().getItem(i).getItemId());
         }
-        bottomNavigationView.setItemIconTintList(null);
         BottomNavigationMenuView menuView = (BottomNavigationMenuView) bottomNavigationView.getChildAt(0);
         for (int i = 0; i < menuView.getChildCount(); i++) {
             final View iconView = menuView.getChildAt(i).findViewById(android.support.design.R.id.icon);
@@ -218,39 +117,34 @@ public class MainActivity extends AppCompatActivity {
             layoutParams.width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 64, displayMetrics);
             iconView.setLayoutParams(layoutParams);
         }
+
+        // gives the icons colors
+        bottomNavigationView.setItemIconTintList(null);
+
+        // main  event display initialization
         eventRecyclerView = (RecyclerView) findViewById(R.id.eventRecyclerView);
         eventRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         eventArrayList = new ArrayList<>();
         eventArrayListToShow = new ArrayList<>();
         eventAdapter = new EventAdapter(this, eventArrayListToShow);
         eventRecyclerView.setAdapter(eventAdapter);
+
         createListData();
-        bottomNavigationView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        // calendar view initialization
         calendarView = findViewById(R.id.calendarView);
         calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
             public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
-
-                dae = SDF.format(new Date(year-1900,month,dayOfMonth));
+                day = SDF.format(new Date(year - 1900, month, dayOfMonth));
                 createEventsToShow();
                 calendarView.setVisibility(View.INVISIBLE);
                 searchLayout.setVisibility(View.VISIBLE);
-//                int datePosition = 0;
-//                for (int i = 0; i < eventArrayList.size(); i++) {
-//                    String date = eventArrayList.get(i).getTime();
-//                    String day = (dayOfMonth<10) ? "0"+dayOfMonth : ""+dayOfMonth;
-//                    String monthStr = (month<10) ? "0"+month : ""+month;
-//                    Log.i("daytag",date.substring(8,10)+", "+day);
-//                    if (/*date.substring(0, 4).equals("" + year) && date.substring(5, 7).equals(monthStr) && */date.substring(8, 10).equals(day)) {
-//                        datePosition = i;
-//                        break;
-//                    }
-//                }
-//                eventRecyclerView.smoothScrollToPosition(datePosition);
                 Toast.makeText(MainActivity.this, "" + dayOfMonth, Toast.LENGTH_SHORT).show();
             }
         });
 
+        // search view initialization
         searchLayout = findViewById(R.id.searchLayout);
         searchEdit = findViewById(R.id.searchEdit);
         searchRecyclerView = findViewById(R.id.searchRecyclerView);
@@ -258,10 +152,12 @@ public class MainActivity extends AppCompatActivity {
         searchRecyclerView.setAdapter(eventAdapter);
         searchEdit.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -275,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //group view initialization
         groupViewLayout = findViewById(R.id.groupLayout);
         groupViewLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -286,12 +183,10 @@ public class MainActivity extends AppCompatActivity {
         groupEdit.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
             }
 
             @Override
@@ -318,6 +213,90 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Switches the current view shown to the correct view
+     *
+     * @param item menu item selected
+     */
+    private boolean setSelectedView(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.navigation_today:
+                setTitle("Today at LC");
+                linearLayoutMain.setVisibility(View.INVISIBLE);
+                calendarView.setVisibility(View.INVISIBLE);
+                addEventLayout.setVisibility(View.INVISIBLE);
+                searchLayout.setVisibility(View.VISIBLE);
+                groupViewLayout.setVisibility(View.INVISIBLE);
+                hideSoftKeyboard(MainActivity.this);
+                return true;
+            case R.id.navigation_thismonth:
+                setTitle("Month view");
+                linearLayoutMain.setVisibility(View.INVISIBLE);
+                calendarView.setVisibility(View.VISIBLE);
+                addEventLayout.setVisibility(View.INVISIBLE);
+                searchLayout.setVisibility(View.INVISIBLE);
+                groupViewLayout.setVisibility(View.INVISIBLE);
+                hideSoftKeyboard(MainActivity.this);
+                return true;
+            case R.id.navigation_add_event:
+                setTitle("Request to post an event");
+                linearLayoutMain.setVisibility(View.INVISIBLE);
+                calendarView.setVisibility(View.INVISIBLE);
+                addEventLayout.setVisibility(View.VISIBLE);
+                searchLayout.setVisibility(View.INVISIBLE);
+                groupViewLayout.setVisibility(View.INVISIBLE);
+                hideSoftKeyboard(MainActivity.this);
+                return true;
+            case R.id.navigation_groups:
+                setTitle("Find a group");
+                linearLayoutMain.setVisibility(View.INVISIBLE);
+                calendarView.setVisibility(View.INVISIBLE);
+                addEventLayout.setVisibility(View.INVISIBLE);
+                searchLayout.setVisibility(View.INVISIBLE);
+                groupViewLayout.setVisibility(View.VISIBLE);
+                hideSoftKeyboard(MainActivity.this);
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Called when the request button is pressed. Sends formatted user inputs to third party email
+     * service of the user's choice.
+     * @param v the view which called this method
+     */
+    public void request(View v) {
+        String emailBody = "Hi Jason,\n\n" +
+                "I'm with " + organizationEdit.getText() +
+                " and we would like to add our event, " + titleEdit.getText() +
+                " to the LC events calendar." +
+                " It will take place at " + editLocation.getText() +
+                " on " + editDate.getText() + " at " + editTime.getText() + ". " +
+                "The description is below, and the image is attached.\n\n" +
+                "Thank you for your time,\n" + nameEdit.getText() + "\n\n" +
+                editDescription.getText() + "\n\n" +
+                "Sent with the LC Now App";
+        String[] CC = {""};
+        hideSoftKeyboard(MainActivity.this);
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent.setData(Uri.parse("mailto:"));
+        emailIntent.setType("text/plain");
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{MAIL_TO});
+        emailIntent.putExtra(Intent.EXTRA_CC, CC);
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Event posting request");
+        emailIntent.putExtra(Intent.EXTRA_TEXT, emailBody);
+        try {
+            startActivity(Intent.createChooser(emailIntent, "Send email"));
+            finish();
+        } catch (android.content.ActivityNotFoundException e) {
+            Toast.makeText(MainActivity.this, "No email client installed.", Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    /**
+     * Further attempts to improve bottom navigation appearance
+     */
     private void removeTextLabel(@NonNull BottomNavigationView bottomNavigationView, @IdRes int menuItemId) {
         View view = bottomNavigationView.findViewById(menuItemId);
         if (view == null) return;
@@ -335,36 +314,49 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Populates event array
+     */
     private void createListData() {
-        for(Event e : SplashActivity.result) {
+        for (Event e : SplashActivity.result) {
             eventArrayList.add(e);
         }
         createEventsToShow();
     }
 
+    /**
+     * Populate event array with only events which contain the key
+     * @param key search key entered by the user
+     */
     private void createEventsToShow(String key) {
         eventArrayListToShow.clear();
         for (Event e : eventArrayList) {
-            if (/*searchType.equals(SEARCH_TYPE_GENERAL) && */(e.getTitle().toLowerCase().contains(key) || e.getDescription().toLowerCase().contains(key))) {
-                eventArrayListToShow.add(e);
-            } /*else if (searchType.equals(SEARCH_TYPE_GROUP) && e.getGroup().toLowerCase().contains(key)) {
-                eventArrayListToShow.add(e);
-            }*/
-        }
-        eventAdapter.notifyDataSetChanged();
-    }
-
-    private void createEventsToShow() {
-        eventArrayListToShow.clear();
-        for (Event e : eventArrayList) {
-            Log.i("Date",e.getTime().substring(0,10)+", "+dae);
-            if (e.getTime().substring(0,10).equals(dae)) {
+            if ((e.getTitle().toLowerCase().contains(key) || e.getDescription().toLowerCase().contains(key))) {
                 eventArrayListToShow.add(e);
             }
         }
         eventAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * Populates event array with events that occur on the specified day.
+     * Defaults to today, can be changed by selecting a different day on the calendar
+     */
+    private void createEventsToShow() {
+        eventArrayListToShow.clear();
+        for (Event e : eventArrayList) {
+            Log.i("Date", e.getTime().substring(0, 10) + ", " + day);
+            if (e.getTime().substring(0, 10).equals(day)) {
+                eventArrayListToShow.add(e);
+            }
+        }
+        eventAdapter.notifyDataSetChanged();
+    }
+
+    /**
+     * Populates group array with only those groups which contain key
+     * @param key the search key entered by the user
+     */
     private void createGroupsToShow(String key) {
         groupsToShow.clear();
         for (String s : allGroups) {
@@ -376,6 +368,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * hides the keyboard
+     */
     private void hideSoftKeyboard(Activity activity) {
         InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
         View currentFocus = activity.getCurrentFocus();
@@ -385,6 +380,10 @@ public class MainActivity extends AppCompatActivity {
         inputMethodManager.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
     }
 
+    /**
+     * populates event array which fall under the selected group
+     * @param group selected group
+     */
     private void showSelectedGroup(String group) {
         eventArrayListToShow.clear();
         for (Event e : eventArrayList) {
@@ -397,12 +396,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent keyEvent) {
-        if (keyCode == KeyEvent.KEYCODE_ENTER && (searchRecyclerView.getVisibility()==View.VISIBLE || groupViewLayout.getVisibility()==View.VISIBLE)) {
+        if (keyCode == KeyEvent.KEYCODE_ENTER && addEventLayout.getVisibility() == View.INVISIBLE) {
             hideSoftKeyboard(this);
             return true;
         }
         return super.onKeyUp(keyCode, keyEvent);
-
     }
 
 

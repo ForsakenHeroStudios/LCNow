@@ -24,21 +24,14 @@ public class SplashActivity extends AppCompatActivity {
 
     public static ArrayList<Event> result;
     public static ArrayList<String> groups;
-    AnimationDrawable splashAnimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+        // displays splash animation gif using a web view
         WebView webView = findViewById(R.id.splashWeb);
         webView.loadUrl("file:///android_asset/splashhtml.html");
-
-//        ImageView splashImage = (ImageView) findViewById(R.id.imageViewSplash);
-//        Log.i("is fine","set imview");
-////        splashImage.set
-//        Log.i("is fine","set background R");
-////        splashAnimation = (AnimationDrawable) splashImage.getBackground();
-//        Log.i("is fine","set splashAni");
         result = new ArrayList<>();
         groups = new ArrayList<>();
         try {
@@ -51,9 +44,6 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-//        splashAnimation.start();
-        Log.i("is fine","start ani");
-
     }
 
     public void getEvents() throws JSONException {
@@ -65,14 +55,10 @@ public class SplashActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
+
                 //load stuff into event objects
-
                 for (int i = 0; i < timeline.length(); i++) {
-
-
                     JSONObject eve = null;
-
-
                     try {
                         eve = timeline.getJSONObject(i);
                     } catch (JSONException e) {
@@ -157,6 +143,7 @@ public class SplashActivity extends AppCompatActivity {
                     Log.d("event", tempEvent.toString());
                     result.add(tempEvent);
                 }
+                // display the main activity now that all events have been loaded
                 Intent intent = new Intent(getApplicationContext(),MainActivity.class);
                 startActivity(intent);
             }

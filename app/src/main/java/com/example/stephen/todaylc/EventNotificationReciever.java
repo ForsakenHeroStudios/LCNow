@@ -15,8 +15,8 @@ import android.support.v4.app.NotificationManagerCompat;
 
 import static com.example.stephen.todaylc.EventAdapter.CHANNEL_ID;
 
-public class MyReceiver extends BroadcastReceiver {
-    public MyReceiver() {
+public class EventNotificationReciever extends BroadcastReceiver {
+    public EventNotificationReciever() {
     }
 
     @Override
