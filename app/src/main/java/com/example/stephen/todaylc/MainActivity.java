@@ -32,8 +32,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
@@ -45,12 +47,12 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
 
     // A list of cards with relevant event info
-    private RecyclerView eventRecyclerView, searchRecyclerView;
+    private RecyclerView eventRecyclerView, searchRecyclerView, groupRecyclerView;
     // a list of all event groups
     private ListView groupListView;
     private EventAdapter eventAdapter;
-    private ArrayAdapter<String> groupAdapter;
-    private ArrayList<String> allGroups, groupsToShow;
+    private GroupAdapter groupAdapter;
+    private ArrayList<Group> allGroups, groupsToShow;
     private ArrayList<Event> eventArrayList, eventArrayListToShow, subList;
     // calendar to select events occurring on a certain day that the user would like to be shown
     private CalendarView calendarView;
@@ -100,9 +102,6 @@ public class MainActivity extends AppCompatActivity {
         c.close();
 
         subList = new ArrayList<>();
-        addEventsToSubList();
-        createEventNotifications();
-
 
         day = SDF.format(new Date());
 
@@ -198,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //group view initialization
+        //TODO: do more testing on whether or not this works, it seems to tho. Also make it more efficient, seems to hang a bit when subbing
         groupViewLayout = findViewById(R.id.groupLayout);
         groupViewLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -220,27 +220,54 @@ public class MainActivity extends AppCompatActivity {
                 createGroupsToShow(s.toString().toLowerCase());
             }
         });
-        groupListView = findViewById(R.id.groupListView);
-        allGroups = new ArrayList<>(SplashActivity.groups);
-        Collections.sort(allGroups);
+//        groupListView = findViewById(R.id.groupListView);
+        groupRecyclerView = findViewById(R.id.groupRecyclerView);
+        allGroups = new ArrayList<>();
+        ArrayList<String> groupTitles = SplashActivity.groups;
+        Collections.sort(groupTitles);
+        for (String s : groupTitles) {
+            allGroups.add(new Group(s,false));
+        }
         groupsToShow = new ArrayList<>(allGroups);
-        groupAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, groupsToShow);
-        groupListView.setAdapter(groupAdapter);
-        groupListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                hideSoftKeyboard(MainActivity.this);
-                showSelectedGroup(groupsToShow.get(position).toLowerCase());
-                groupViewLayout.setVisibility(View.INVISIBLE);
-                searchLayout.setVisibility(View.VISIBLE);
-            }
-        });
+        groupAdapter = new GroupAdapter(groupsToShow,this);
+        groupRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        groupRecyclerView.setAdapter(groupAdapter);
+//        groupListView.setAdapter(groupAdapter);
+//        groupListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                hideSoftKeyboard(MainActivity.this);
+//                showSelectedGroup(groupsToShow.get(position).getGroupName().toLowerCase());
+//                groupViewLayout.setVisibility(View.INVISIBLE);
+//                searchLayout.setVisibility(View.VISIBLE);
+//            }
+//        });
+        addEventsToSubList();
+        createEventNotifications();
 
-        //TODO: lots of things to get subs to work here. Next step is enable subscription to certain filter results
-        groupListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                String groupSelected = groupsToShow.get(position);
+
+
+//        groupListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+//            @Override
+//            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+//                String groupSelected = groupsToShow.get(position);
+//                Cursor cursor = db.rawQuery("SELECT * FROM subs WHERE groups= '"+groupSelected+"'",null);
+//                if (cursor.getCount() == 0) {
+//                    db.execSQL("INSERT INTO subs (groups) VALUES ('" + groupSelected + "')");
+//                    addEventsToSubList();
+//                    createEventNotifications();
+//                }
+//                cursor.close();
+//                Log.i("saved to database", groupSelected);
+//                return true;
+//            }
+//        });
+    }
+
+    public void changeSubState(View v) {
+        ImageView star = (ImageView) v;
+        String groupSelected = ((TextView)((ViewGroup)star.getParent()).getChildAt(0)).getText().toString();
+        if (star.getTag().equals("off")) {
                 Cursor cursor = db.rawQuery("SELECT * FROM subs WHERE groups= '"+groupSelected+"'",null);
                 if (cursor.getCount() == 0) {
                     db.execSQL("INSERT INTO subs (groups) VALUES ('" + groupSelected + "')");
@@ -249,9 +276,25 @@ public class MainActivity extends AppCompatActivity {
                 }
                 cursor.close();
                 Log.i("saved to database", groupSelected);
-                return true;
+                star.setTag("on");
+        } else {
+            db.execSQL("DELETE FROM subs WHERE groups= '"+groupSelected+"'");
+            star.setTag("off");
+            for (int i = 0; i < subList.size(); i++) {
+                if (subList.get(i).getGroup().equals(groupSelected)) {
+                    subList.remove(i);
+                    break;
+                }
             }
-        });
+            for (Group g : allGroups) {
+                if (g.getGroupName().equals(groupSelected)) {
+                    g.setSub(false);
+                    groupAdapter.notifyDataSetChanged();
+                    break;
+                }
+            }
+            Log.i("removed from database",groupSelected);
+        }
     }
 
     private void addEventsToSubList() {
@@ -264,6 +307,13 @@ public class MainActivity extends AppCompatActivity {
             String group = c.getString(groupsIndex);
             if (group!=null) {
                 groupsSubbed.add(group);
+                for (Group g : allGroups) {
+                    if (g.getGroupName().equals(group)) {
+                        g.setSub(true);
+                        groupAdapter.notifyDataSetChanged();
+                        break;
+                    }
+                }
             }
             c.moveToNext();
         }
@@ -461,9 +511,9 @@ public class MainActivity extends AppCompatActivity {
      */
     private void createGroupsToShow(String key) {
         groupsToShow.clear();
-        for (String s : allGroups) {
-            if (s.toLowerCase().contains(key)) {
-                groupsToShow.add(s);
+        for (Group g : allGroups) {
+            if (g.getGroupName().toLowerCase().contains(key)) {
+                groupsToShow.add(g);
             }
         }
         groupAdapter.notifyDataSetChanged();

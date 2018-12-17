@@ -97,7 +97,7 @@
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:orientation="vertical"
-        android:visibility="visible"
+        android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/navigation"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -142,7 +142,7 @@
     <CalendarView
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/navigation"
         app:layout_constraintTop_toTopOf="parent" />
@@ -176,7 +176,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginBottom="8dp"
         android:orientation="vertical"
-        android:visibility="invisible"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/linearLayoutMain"
         app:layout_constraintEnd_toEndOf="@+id/linearLayoutMain"
         app:layout_constraintStart_toStartOf="@+id/linearLayoutMain"
@@ -190,10 +190,17 @@
             android:hint="Search for a group..."
             android:inputType="textAutoCorrect|textAutoComplete|textFilter" />
 
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/groupRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical" />
+
         <ListView
             android:id="@+id/groupListView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:visibility="invisible" />
 
     </LinearLayout>
 
