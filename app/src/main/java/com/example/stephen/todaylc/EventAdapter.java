@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,10 +44,26 @@ public class EventAdapter extends RecyclerView.Adapter<EventHolder> {
                 Toast.makeText(context,events.get(position).getTitle()+" at "+events.get(position).getTime()+" reminder set!",Toast.LENGTH_LONG).show();
                 Calendar calendar = Calendar.getInstance();
                 String time = events.get(position).getTime();
-                // will probably give an error if time is 0:00:00
-                // subtract 1 from month because Calendar months are 0-11, and subtract 1 from hour to notify an hour prior to event
-                // TODO: use start time if available
-                calendar.set(Integer.parseInt(time.substring(0,4)),Integer.parseInt(time.substring(5, 7))-1,Integer.parseInt(time.substring(8, 10)),Integer.parseInt(time.substring(11, 13))-1,Integer.parseInt(time.substring(14, 16)),Integer.parseInt(time.substring(17, 19)));
+
+                // The following determines if a specific start time was specified for the event,
+                // and prefers that over the time JSON object, which don't always match.
+                // We need to determine it's am or pm as well, since the calendar.set()
+                // method wants 24 hour format.
+                String start = events.get(position).getStartEnd();
+                int hour = -1;
+                if (start.equals("") || start.indexOf('m')<=0) {
+                    start = time.substring(11, 13);
+                    hour += Integer.parseInt(start);
+                } else {
+                    if (start.charAt(start.indexOf('m') - 1) == 'p') {
+                        hour+=12;
+                    }
+                    start = start.substring(0, start.indexOf(':'));
+                    hour += Integer.parseInt(start);
+
+                }
+                // subtract 1 from month because Calendar months are 0-11
+                calendar.set(Integer.parseInt(time.substring(0,4)),Integer.parseInt(time.substring(5, 7))-1,Integer.parseInt(time.substring(8, 10)),hour,Integer.parseInt(time.substring(14, 16)),Integer.parseInt(time.substring(17, 19)));
                 Intent intent = new Intent(App.getContext(),EventNotificationReciever.class);
                 // might want to look into effect of different flags
                 PendingIntent pendingIntent = PendingIntent.getBroadcast(App.getContext(),requestID, intent,0);
