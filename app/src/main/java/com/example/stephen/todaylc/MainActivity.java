@@ -1,7 +1,12 @@
 package com.example.stephen.todaylc;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
@@ -33,6 +38,7 @@ import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 
@@ -45,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private EventAdapter eventAdapter;
     private ArrayAdapter<String> groupAdapter;
     private ArrayList<String> allGroups, groupsToShow;
-    private ArrayList<Event> eventArrayList, eventArrayListToShow;
+    private ArrayList<Event> eventArrayList, eventArrayListToShow, subList;
     // calendar to select events occurring on a certain day that the user would like to be shown
     private CalendarView calendarView;
     // current form of navigation between views
@@ -62,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
     // the email to request to add an event is sent to this address
     private final String MAIL_TO = "sbaker@lclark.edu"; // TODO: change this to Jason's email
 
+    private SQLiteDatabase db;
+
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
@@ -77,6 +85,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        db = this.openOrCreateDatabase("Subscriptions",MODE_PRIVATE,null);
+        db.execSQL("CREATE TABLE IF NOT EXISTS subs (groups VARCHAR, filters VARCHAR, id INTEGER PRIMARY KEY)");
+        Cursor c = db.rawQuery("SELECT * FROM subs",null);
+        int groupsIndex = c.getColumnIndex("groups");
+        int filtersIndex = c.getColumnIndex("filters");
+        int idIndex = c.getColumnIndex("id");
+        c.moveToFirst();
+        while (!c.isAfterLast()) {
+            Log.i("group", ""+c.getString(groupsIndex));
+            Log.i("filter", ""+c.getString(filtersIndex));
+            c.moveToNext();
+        }
+        c.close();
+
+        subList = new ArrayList<>();
+        addEventsToSubList();
+        createEventNotifications();
+
 
         day = SDF.format(new Date());
 
@@ -210,7 +236,83 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //TODO: lots of things to get subs to work here. Next step is enable subscription to certain filter results
+        groupListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                String groupSelected = groupsToShow.get(position);
+                Cursor cursor = db.rawQuery("SELECT * FROM subs WHERE groups= '"+groupSelected+"'",null);
+                if (cursor.getCount() == 0) {
+                    db.execSQL("INSERT INTO subs (groups) VALUES ('" + groupSelected + "')");
+                    addEventsToSubList();
+                    createEventNotifications();
+                }
+                cursor.close();
+                Log.i("saved to database", groupSelected);
+                return true;
+            }
+        });
+    }
 
+    private void addEventsToSubList() {
+        ArrayList<String> groupsSubbed = new ArrayList<>();
+        Cursor c = db.rawQuery("SELECT * FROM subs",null);
+        int groupsIndex = c.getColumnIndex("groups");
+        int filtersIndex = c.getColumnIndex("filters");
+        c.moveToFirst();
+        while (!c.isAfterLast()) {
+            String group = c.getString(groupsIndex);
+            if (group!=null) {
+                groupsSubbed.add(group);
+            }
+            c.moveToNext();
+        }
+        for (String g : groupsSubbed) {
+            for (Event e : SplashActivity.result) {
+                if (e.getGroup().equals(g))
+                    subList.add(e);
+            }
+        }
+        Log.i("subbedEvents","num: "+ subList.size());
+        c.close();
+    }
+
+    //TODO: Will calling this to create the same notification multiple times be a problem?
+    private void createEventNotifications() {
+        for (int i = 0; i<subList.size(); i++) {
+            Event event = subList.get(i);
+            int requestID = event.hashCode();
+            Calendar calendar = Calendar.getInstance();
+            String time = event.getTime();
+
+            // The following determines if a specific start time was specified for the event,
+            // and prefers that over the time JSON object, which don't always match.
+            // We need to determine it's am or pm as well, since the calendar.set()
+            // method wants 24 hour format.
+            String start = event.getStartEnd();
+            int hour = -1;
+            if (start.equals("") || start.indexOf('m')<=0) {
+                start = time.substring(11, 13);
+                hour += Integer.parseInt(start);
+            } else {
+                if (start.charAt(start.indexOf('m') - 1) == 'p') {
+                    hour+=12;
+                }
+                start = start.substring(0, start.indexOf(':'));
+                hour += Integer.parseInt(start);
+
+            }
+            // subtract 1 from month because Calendar months are 0-11
+            calendar.set(Integer.parseInt(time.substring(0,4)),Integer.parseInt(time.substring(5, 7))-1,Integer.parseInt(time.substring(8, 10)),hour,Integer.parseInt(time.substring(14, 16)),Integer.parseInt(time.substring(17, 19)));
+            Intent intent = new Intent(App.getContext(),EventNotificationReceiver.class);
+            intent.putExtra("title",event.getTitle());
+            intent.putExtra("location",event.getLocation());
+            // might want to look into effect of different flags
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(App.getContext(),requestID, intent,0);
+            AlarmManager alarmManager = (AlarmManager)App.getApplication().getSystemService(Context.ALARM_SERVICE);
+
+            alarmManager.set(AlarmManager.RTC_WAKEUP,  calendar.getTimeInMillis(), pendingIntent);
+        }
     }
 
     /**
