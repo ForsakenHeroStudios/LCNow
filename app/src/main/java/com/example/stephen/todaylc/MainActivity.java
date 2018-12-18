@@ -50,10 +50,12 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView eventRecyclerView, searchRecyclerView, groupRecyclerView;
     // a list of all event groups
     private ListView groupListView;
-    private EventAdapter eventAdapter;
+    private static EventAdapter eventAdapter;
     private GroupAdapter groupAdapter;
     private ArrayList<Group> allGroups, groupsToShow;
-    private ArrayList<Event> eventArrayList, eventArrayListToShow, subList;
+    private static ArrayList<Event> eventArrayList;
+    private ArrayList<Event> subList;
+    private static ArrayList<Event> eventArrayListToShow;
     // calendar to select events occurring on a certain day that the user would like to be shown
     private CalendarView calendarView;
     // current form of navigation between views
@@ -66,9 +68,10 @@ public class MainActivity extends AppCompatActivity {
     private final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
     // selected day
     private String day;
-    private LinearLayout searchLayout, linearLayoutMain, addEventLayout, groupViewLayout;
+    private static LinearLayout searchLayout, linearLayoutMain, addEventLayout, groupViewLayout;
     // the email to request to add an event is sent to this address
     private final String MAIL_TO = "sbaker@lclark.edu"; // TODO: change this to Jason's email
+    private static AlarmManager alarmManager;
 
     private SQLiteDatabase db;
 
@@ -87,19 +90,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        db = this.openOrCreateDatabase("Subscriptions",MODE_PRIVATE,null);
+        db = this.openOrCreateDatabase("Subscriptions", MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS subs (groups VARCHAR, filters VARCHAR, id INTEGER PRIMARY KEY)");
-        Cursor c = db.rawQuery("SELECT * FROM subs",null);
+        Cursor c = db.rawQuery("SELECT * FROM subs", null);
         int groupsIndex = c.getColumnIndex("groups");
         int filtersIndex = c.getColumnIndex("filters");
         int idIndex = c.getColumnIndex("id");
         c.moveToFirst();
         while (!c.isAfterLast()) {
-            Log.i("group", ""+c.getString(groupsIndex));
-            Log.i("filter", ""+c.getString(filtersIndex));
+            Log.i("group", "" + c.getString(groupsIndex));
+            Log.i("filter", "" + c.getString(filtersIndex));
             c.moveToNext();
         }
         c.close();
+
+        alarmManager = (AlarmManager) App.getApplication().getSystemService(Context.ALARM_SERVICE);
 
         subList = new ArrayList<>();
 
@@ -226,10 +231,10 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<String> groupTitles = SplashActivity.groups;
         Collections.sort(groupTitles);
         for (String s : groupTitles) {
-            allGroups.add(new Group(s,false));
+            allGroups.add(new Group(s, false));
         }
         groupsToShow = new ArrayList<>(allGroups);
-        groupAdapter = new GroupAdapter(groupsToShow,this);
+        groupAdapter = new GroupAdapter(groupsToShow, this);
         groupRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         groupRecyclerView.setAdapter(groupAdapter);
 //        groupListView.setAdapter(groupAdapter);
@@ -243,8 +248,9 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
         addEventsToSubList();
-        createEventNotifications();
-
+        for (Event e : subList) {
+            createEventNotification(e);
+        }
 
 
 //        groupListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -265,47 +271,61 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void changeSubState(View v) {
+        int counter=0;
         ImageView star = (ImageView) v;
-        String groupSelected = ((TextView)((ViewGroup)star.getParent()).getChildAt(0)).getText().toString();
-        if (star.getTag().equals("off")) {
-                Cursor cursor = db.rawQuery("SELECT * FROM subs WHERE groups= '"+groupSelected+"'",null);
-                if (cursor.getCount() == 0) {
-                    db.execSQL("INSERT INTO subs (groups) VALUES ('" + groupSelected + "')");
-                    addEventsToSubList();
-                    createEventNotifications();
+        String groupSelected = ((TextView) ((ViewGroup) star.getParent()).getChildAt(0)).getText().toString();
+        if (star.getTag().toString().equals("off")) {
+            Cursor cursor = db.rawQuery("SELECT * FROM subs WHERE groups= '" + groupSelected + "'", null);
+            if (cursor.getCount() == 0) {
+                db.execSQL("INSERT INTO subs (groups) VALUES ('" + groupSelected + "')");
+                for (Group g : allGroups) {
+                    if (g.getGroupName().equals(groupSelected)) {
+                        g.setSub(true);
+                        groupAdapter.notifyDataSetChanged();
+                        break;
+                    }
                 }
-                cursor.close();
-                Log.i("saved to database", groupSelected);
-                star.setTag("on");
+                for (Event e : eventArrayList) {
+                    if (e.getGroup().equals(groupSelected)) {
+                        subList.add(e);
+                        createEventNotification(e);
+                    }
+                }
+
+            }
+            cursor.close();
+            Log.i("saved", groupSelected);
         } else {
-            db.execSQL("DELETE FROM subs WHERE groups= '"+groupSelected+"'");
-            star.setTag("off");
+            db.execSQL("DELETE FROM subs WHERE groups= '" + groupSelected + "'");
             for (int i = 0; i < subList.size(); i++) {
                 if (subList.get(i).getGroup().equals(groupSelected)) {
-                    subList.remove(i);
-                    break;
+                    cancelEventNotification(subList.remove(i));
+                    i--;
                 }
             }
+
             for (Group g : allGroups) {
+                if (g.isSub())
+                    counter++;
                 if (g.getGroupName().equals(groupSelected)) {
                     g.setSub(false);
                     groupAdapter.notifyDataSetChanged();
                     break;
                 }
             }
-            Log.i("removed from database",groupSelected);
+            Log.i("removed", groupSelected);
         }
     }
 
     private void addEventsToSubList() {
         ArrayList<String> groupsSubbed = new ArrayList<>();
-        Cursor c = db.rawQuery("SELECT * FROM subs",null);
+        Cursor c = db.rawQuery("SELECT * FROM subs", null);
         int groupsIndex = c.getColumnIndex("groups");
         int filtersIndex = c.getColumnIndex("filters");
         c.moveToFirst();
         while (!c.isAfterLast()) {
             String group = c.getString(groupsIndex);
-            if (group!=null) {
+            if (group != null) {
                 groupsSubbed.add(group);
                 for (Group g : allGroups) {
                     if (g.getGroupName().equals(group)) {
@@ -323,46 +343,51 @@ public class MainActivity extends AppCompatActivity {
                     subList.add(e);
             }
         }
-        Log.i("subbedEvents","num: "+ subList.size());
+        Log.i("subbedEvents", "num: " + subList.size());
         c.close();
     }
 
-    //TODO: Will calling this to create the same notification multiple times be a problem?
-    private void createEventNotifications() {
-        for (int i = 0; i<subList.size(); i++) {
-            Event event = subList.get(i);
-            int requestID = event.hashCode();
-            Calendar calendar = Calendar.getInstance();
-            String time = event.getTime();
+    private void createEventNotification(Event event) {
+        int requestID = event.hashCode();
+        Calendar calendar = Calendar.getInstance();
+        String time = event.getTime();
 
-            // The following determines if a specific start time was specified for the event,
-            // and prefers that over the time JSON object, which don't always match.
-            // We need to determine it's am or pm as well, since the calendar.set()
-            // method wants 24 hour format.
-            String start = event.getStartEnd();
-            int hour = -1;
-            if (start.equals("") || start.indexOf('m')<=0) {
-                start = time.substring(11, 13);
-                hour += Integer.parseInt(start);
-            } else {
-                if (start.charAt(start.indexOf('m') - 1) == 'p') {
-                    hour+=12;
-                }
-                start = start.substring(0, start.indexOf(':'));
-                hour += Integer.parseInt(start);
-
+        // The following determines if a specific start time was specified for the event,
+        // and prefers that over the time JSON object, which don't always match.
+        // We need to determine it's am or pm as well, since the calendar.set()
+        // method wants 24 hour format.
+        String start = event.getStartEnd();
+        int hour = -1;
+        if (start.equals("") || start.indexOf('m') <= 0) {
+            start = time.substring(11, 13);
+            hour += Integer.parseInt(start);
+        } else {
+            if (start.charAt(start.indexOf('m') - 1) == 'p') {
+                hour += 12;
             }
-            // subtract 1 from month because Calendar months are 0-11
-            calendar.set(Integer.parseInt(time.substring(0,4)),Integer.parseInt(time.substring(5, 7))-1,Integer.parseInt(time.substring(8, 10)),hour,Integer.parseInt(time.substring(14, 16)),Integer.parseInt(time.substring(17, 19)));
-            Intent intent = new Intent(App.getContext(),EventNotificationReceiver.class);
-            intent.putExtra("title",event.getTitle());
-            intent.putExtra("location",event.getLocation());
-            // might want to look into effect of different flags
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(App.getContext(),requestID, intent,0);
-            AlarmManager alarmManager = (AlarmManager)App.getApplication().getSystemService(Context.ALARM_SERVICE);
+            start = start.substring(0, start.indexOf(':'));
+            hour += Integer.parseInt(start);
 
-            alarmManager.set(AlarmManager.RTC_WAKEUP,  calendar.getTimeInMillis(), pendingIntent);
         }
+        // subtract 1 from month because Calendar months are 0-11
+        calendar.set(Integer.parseInt(time.substring(0, 4)), Integer.parseInt(time.substring(5, 7)) - 1, Integer.parseInt(time.substring(8, 10)), hour, Integer.parseInt(time.substring(14, 16)), Integer.parseInt(time.substring(17, 19)));
+        Intent intent = new Intent(App.getContext(), EventNotificationReceiver.class);
+        intent.putExtra("title", event.getTitle());
+        intent.putExtra("location", event.getLocation());
+        // might want to look into effect of different flags
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(App.getContext(), requestID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+
+    }
+
+    private void cancelEventNotification(Event event) {
+        int requestID = event.hashCode();
+        Intent intent = new Intent(App.getContext(), EventNotificationReceiver.class);
+        intent.putExtra("title", event.getTitle());
+        intent.putExtra("location", event.getLocation());
+        // might want to look into effect of different flags
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(App.getContext(), requestID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.cancel(pendingIntent);
     }
 
     /**
@@ -415,6 +440,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Called when the request button is pressed. Sends formatted user inputs to third party email
      * service of the user's choice.
+     *
      * @param v the view which called this method
      */
     public void request(View v) {
@@ -478,6 +504,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Populate event array with only events which contain the key
+     *
      * @param key search key entered by the user
      */
     private void createEventsToShow(String key) {
@@ -507,6 +534,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Populates group array with only those groups which contain key
+     *
      * @param key the search key entered by the user
      */
     private void createGroupsToShow(String key) {
@@ -534,9 +562,10 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * populates event array which fall under the selected group
+     *
      * @param group selected group
      */
-    private void showSelectedGroup(String group) {
+    public static void showSelectedGroup(String group) {
         eventArrayListToShow.clear();
         for (Event e : eventArrayList) {
             if (e.getGroup().toLowerCase().contains(group)) {
@@ -544,6 +573,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         eventAdapter.notifyDataSetChanged();
+        groupViewLayout.setVisibility(View.INVISIBLE);
+        searchLayout.setVisibility(View.VISIBLE);
     }
 
     @Override

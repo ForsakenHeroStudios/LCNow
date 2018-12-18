@@ -1,6 +1,7 @@
 package com.example.stephen.todaylc;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class Event {
     private String title;
@@ -14,6 +15,23 @@ public class Event {
     private String[] tags;
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Event event = (Event) o;
+        return Objects.equals(title, event.title) &&
+                Objects.equals(time, event.time) &&
+                Objects.equals(location, event.location);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(title, time, location);
+    }
+
+    @Override
+
     public String toString() {
         return "Event{" +
                 "title='" + title + '\'' +
