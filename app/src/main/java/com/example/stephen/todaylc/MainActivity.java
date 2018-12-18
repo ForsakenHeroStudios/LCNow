@@ -2,6 +2,7 @@ package com.example.stephen.todaylc;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.Fragment;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,7 @@ import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.design.internal.BottomNavigationMenuView;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.MenuView;
 import android.support.v7.widget.LinearLayoutManager;
@@ -551,13 +553,14 @@ public class MainActivity extends AppCompatActivity {
     /**
      * hides the keyboard
      */
-    private void hideSoftKeyboard(Activity activity) {
+    private static void hideSoftKeyboard(Activity activity) {
         InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
         View currentFocus = activity.getCurrentFocus();
         if (currentFocus == null) {
             currentFocus = new View(activity);
         }
         inputMethodManager.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
+
     }
 
     /**
@@ -570,11 +573,13 @@ public class MainActivity extends AppCompatActivity {
         for (Event e : eventArrayList) {
             if (e.getGroup().toLowerCase().contains(group)) {
                 eventArrayListToShow.add(e);
+                Log.d("description",e.getDescription());
             }
         }
         eventAdapter.notifyDataSetChanged();
         groupViewLayout.setVisibility(View.INVISIBLE);
         searchLayout.setVisibility(View.VISIBLE);
+        hideSoftKeyboard((Activity)(searchLayout.getContext()));
     }
 
     @Override

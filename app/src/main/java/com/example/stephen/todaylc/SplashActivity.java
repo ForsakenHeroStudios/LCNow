@@ -81,6 +81,9 @@ public class SplashActivity extends AppCompatActivity {
                     }
                     if (description.equals("null")) {
                         description="";
+                    } else {
+                        // replace ’ with the html for the apostrophe, since we're displaying it that way
+                        description = description.replace("’","&#8217;");
                     }
 
                     String time = null;
@@ -122,6 +125,9 @@ public class SplashActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                    // leftover from bad JSON object it seems causes poor appearance
+                    monthDay = monthDay.replace("<span class=\"lw_date_year\">","");
+                    monthDay = monthDay.replace("</span>","");
 
                     String startEnd = null;
                     try {
