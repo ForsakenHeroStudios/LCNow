@@ -407,6 +407,7 @@ public class MainActivity extends AppCompatActivity {
                 searchLayout.setVisibility(View.VISIBLE);
                 groupViewLayout.setVisibility(View.INVISIBLE);
                 hideSoftKeyboard(MainActivity.this);
+                createEventsToShow();
                 return true;
             case R.id.navigation_thismonth:
                 setTitle("Month view");
@@ -513,6 +514,7 @@ public class MainActivity extends AppCompatActivity {
         eventArrayListToShow.clear();
         for (Event e : eventArrayList) {
             if ((e.getTitle().toLowerCase().contains(key) || e.getDescription().toLowerCase().contains(key))) {
+                e.setFirstOfDay(false);
                 eventArrayListToShow.add(e);
             }
         }
@@ -525,11 +527,16 @@ public class MainActivity extends AppCompatActivity {
      */
     private void createEventsToShow() {
         eventArrayListToShow.clear();
+        String currentDay = "";
         for (Event e : eventArrayList) {
-            Log.i("Date", e.getTime().substring(0, 10) + ", " + day);
-            if (e.getTime().substring(0, 10).equals(day)) {
-                eventArrayListToShow.add(e);
+            String eventDay=e.getTime().substring(0, 10);
+            if (eventDay.equals(currentDay)) {
+                e.setFirstOfDay(false);
+            } else {
+                e.setFirstOfDay(true);
+                currentDay = e.getTime().substring(0,10);
             }
+            eventArrayListToShow.add(e);
         }
         eventAdapter.notifyDataSetChanged();
     }
@@ -572,8 +579,8 @@ public class MainActivity extends AppCompatActivity {
         eventArrayListToShow.clear();
         for (Event e : eventArrayList) {
             if (e.getGroup().toLowerCase().contains(group)) {
+                e.setFirstOfDay(false);
                 eventArrayListToShow.add(e);
-                Log.d("description",e.getDescription());
             }
         }
         eventAdapter.notifyDataSetChanged();

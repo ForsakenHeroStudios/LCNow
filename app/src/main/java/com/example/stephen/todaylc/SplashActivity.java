@@ -144,7 +144,7 @@ public class SplashActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    Event tempEvent = new Event(title, description, time, img, loc, group,monthDay,startEnd,tags);
+                    Event tempEvent = new Event(title, description, time, img, loc, group,monthDay,startEnd,tags,false);
 
                     Log.d("event", tempEvent.toString());
                     result.add(tempEvent);

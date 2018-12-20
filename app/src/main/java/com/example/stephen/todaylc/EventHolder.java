@@ -16,9 +16,13 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 public class EventHolder extends RecyclerView.ViewHolder {
-    private TextView eventTitle, eventTime, eventLocation;
+    private TextView eventTitle, eventTime, eventLocation, dividerTextView;
     private WebView  eventDescription;
     private ImageView imageView;
 
@@ -29,6 +33,7 @@ public class EventHolder extends RecyclerView.ViewHolder {
         eventTime = itemView.findViewById(R.id.event_time);
         imageView = itemView.findViewById(R.id.imageView);
         eventLocation = itemView.findViewById(R.id.event_location);
+        dividerTextView = itemView.findViewById(R.id.dividerTextView);
     }
 
     public void setDetails(Event event) {
@@ -36,6 +41,15 @@ public class EventHolder extends RecyclerView.ViewHolder {
         eventDescription.getSettings().setJavaScriptEnabled(true);
         eventDescription.setWebViewClient(new WebViewClient());
         eventDescription.loadData(event.getDescription(),"text/html","UTF-8");
+        Calendar calendar = Calendar.getInstance();
+        String time = event.getTime();
+        calendar.set(Integer.parseInt(time.substring(0, 4)), Integer.parseInt(time.substring(5, 7)) - 1, Integer.parseInt(time.substring(8, 10)));
+        dividerTextView.setText(calendar.getDisplayName(Calendar.DAY_OF_WEEK,Calendar.LONG, Locale.US)+" "+calendar.getDisplayName(Calendar.MONTH,Calendar.LONG, Locale.US)+" "+calendar.get(Calendar.DATE)+", "+calendar.get(Calendar.YEAR));
+        if (event.isFirstOfDay()) {
+            dividerTextView.setVisibility(View.VISIBLE);
+        } else {
+            dividerTextView.setVisibility(View.GONE);
+        }
         if (event.getStartEnd() == null || event.getStartEnd().equals("")) {
             eventTime.setText(event.getMonthDay());
         } else {
