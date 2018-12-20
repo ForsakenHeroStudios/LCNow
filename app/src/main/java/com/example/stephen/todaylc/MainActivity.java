@@ -68,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
     // button that sends the user from the request to add event page to an email service of their choice
     private Button requestButton;
     // various text fields
-    private EditText nameEdit, emailEdit, organizationEdit, editDescription, editDate, editTime, editLocation, titleEdit, searchEdit, groupEdit;
+    private EditText nameEdit, emailEdit, organizationEdit, editDescription, editDate, editTime, editLocation, titleEdit, groupEdit;
+    private static EditText searchEdit;
     // date format to find which events should be displayed when a certain date is selected
     private final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
     // selected day
@@ -431,6 +432,7 @@ public class MainActivity extends AppCompatActivity {
                 groupViewLayout.setVisibility(View.INVISIBLE);
                 hideSoftKeyboard(MainActivity.this);
                 createEventsToShow();
+                searchEdit.setVisibility(View.VISIBLE);
                 return true;
             case R.id.navigation_thismonth:
                 setTitle("Month view");
@@ -609,6 +611,7 @@ public class MainActivity extends AppCompatActivity {
         eventAdapter.notifyDataSetChanged();
         groupViewLayout.setVisibility(View.INVISIBLE);
         searchLayout.setVisibility(View.VISIBLE);
+        searchEdit.setVisibility(View.GONE);
         hideSoftKeyboard((Activity) (searchLayout.getContext()));
     }
 

@@ -9,7 +9,7 @@ Current functionality
 - Search for a specific event (simply checks if description or title contains the string entered by the user).
 - Can format an email for you to send to Jason Feiner to request to add an event. The user fills in all fields, and tapping the request button takes the user to their email service of choice.
 - Long hold on an event to set a heads-up notification about that event to appear one hour prior to the event.
-- Tap the star next to a group to subscribe to it. Notifications for upcoming events in subscribed areas will automatically appear without the user manually selecting specific events (but that functionality still exists)
+- Tap the star next to a group to subscribe to it. Notifications for upcoming events in subscribed areas will automatically appear without the user manually selecting specific events
 
 Current problems
 - Will not run on our old tablet (API 21, which is the minimum we will support). Something with the bottom navigation widget isn't supported. This shouldn't be a major issue, as we plan to move away from a bottom navigation UI to a grid-like view as more features are added.
@@ -17,7 +17,6 @@ Current problems
 - Some dates and/or start and end times of events display raw html, while others have just a date and time. We may want to implent a Web View here, or perhaps just search through the string to find the relevant info to display.
 - Bottom navigation view icons shift up and down awkwardly, which again will not be much of a problem further down the road, as we will not be using this in our final UI.
 - Keyboard is slow to close when tapping on other items or pressing enter, but this is most likely because we are using an emulator.
-- Manually selecting an event, and then unsubscribing from a group that that event is a part of will remove that notification, which the user may not want.
 
 Next steps
 - Allow the user to subscribe to certain filters.
