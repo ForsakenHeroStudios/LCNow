@@ -5,6 +5,7 @@ import android.app.AlarmManager;
 import android.app.Fragment;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -15,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.support.design.internal.BottomNavigationMenuView;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.MenuView;
 import android.support.v7.widget.LinearLayoutManager;
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private GroupAdapter groupAdapter;
     private ArrayList<Group> allGroups, groupsToShow;
     private static ArrayList<Event> eventArrayList;
+    public static ArrayList<Event> manualSubs;
     private ArrayList<Event> subList;
     private static ArrayList<Event> eventArrayListToShow;
     // calendar to select events occurring on a certain day that the user would like to be shown
@@ -109,6 +112,8 @@ public class MainActivity extends AppCompatActivity {
         alarmManager = (AlarmManager) App.getApplication().getSystemService(Context.ALARM_SERVICE);
 
         subList = new ArrayList<>();
+
+        manualSubs = (manualSubs == null) ? new ArrayList<Event>() : manualSubs;
 
         day = SDF.format(new Date());
 
@@ -273,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void changeSubState(View v) {
-        int counter=0;
+        int counter = 0;
         ImageView star = (ImageView) v;
         String groupSelected = ((TextView) ((ViewGroup) star.getParent()).getChildAt(0)).getText().toString();
         if (star.getTag().toString().equals("off")) {
@@ -288,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 for (Event e : eventArrayList) {
-                    if (e.getGroup().equals(groupSelected)) {
+                    if (e.getGroup().equals(groupSelected) && !subList.contains(e)) {
                         subList.add(e);
                         createEventNotification(e);
                     }
@@ -299,10 +304,28 @@ public class MainActivity extends AppCompatActivity {
             Log.i("saved", groupSelected);
         } else {
             db.execSQL("DELETE FROM subs WHERE groups= '" + groupSelected + "'");
-            for (int i = 0; i < subList.size(); i++) {
-                if (subList.get(i).getGroup().equals(groupSelected)) {
-                    cancelEventNotification(subList.remove(i));
-                    i--;
+            for (final int[] i = {0}; i[0] < subList.size(); i[0]++) {
+                final Event e = subList.get(i[0]);
+                if (e.getGroup().equals(groupSelected)) {
+                    if (!manualSubs.contains(e)) {
+                        cancelEventNotification(subList.remove(i[0]));
+                        i[0]--;
+                    } else {
+                        new AlertDialog.Builder(this)
+                                .setIcon(android.R.drawable.ic_dialog_alert)
+                                .setTitle("Reminder Conflict")
+                                .setMessage("You have manually created a notification in the group which you are unsubscribing from. Would you like to keep the reminder for "+e.getTitle()+"?")
+                                .setPositiveButton("Yes", null)
+                                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        subList.remove(e);
+                                        cancelEventNotification(e);
+                                        manualSubs.remove(e);
+                                    }
+                                })
+                                .show();
+                    }
                 }
             }
 
@@ -529,12 +552,12 @@ public class MainActivity extends AppCompatActivity {
         eventArrayListToShow.clear();
         String currentDay = "";
         for (Event e : eventArrayList) {
-            String eventDay=e.getTime().substring(0, 10);
+            String eventDay = e.getTime().substring(0, 10);
             if (eventDay.equals(currentDay)) {
                 e.setFirstOfDay(false);
             } else {
                 e.setFirstOfDay(true);
-                currentDay = e.getTime().substring(0,10);
+                currentDay = e.getTime().substring(0, 10);
             }
             eventArrayListToShow.add(e);
         }
@@ -586,7 +609,7 @@ public class MainActivity extends AppCompatActivity {
         eventAdapter.notifyDataSetChanged();
         groupViewLayout.setVisibility(View.INVISIBLE);
         searchLayout.setVisibility(View.VISIBLE);
-        hideSoftKeyboard((Activity)(searchLayout.getContext()));
+        hideSoftKeyboard((Activity) (searchLayout.getContext()));
     }
 
     @Override

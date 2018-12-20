@@ -39,7 +39,8 @@ public class EventAdapter extends RecyclerView.Adapter<EventHolder> {
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                int requestID = (int) System.currentTimeMillis();
+                MainActivity.manualSubs.add(event);
+                int requestID = event.hashCode();
                 Toast.makeText(context,event.getTitle()+" at "+event.getTime()+" reminder set!",Toast.LENGTH_LONG).show();
                 Calendar calendar = Calendar.getInstance();
                 String time = event.getTime();
