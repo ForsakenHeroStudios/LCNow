@@ -150,7 +150,7 @@ public class SplashActivity extends AppCompatActivity {
                     result.add(tempEvent);
                 }
                 // display the main activity now that all events have been loaded
-                Intent intent = new Intent(getApplicationContext(),MainActivity.class);
+                Intent intent = new Intent(getApplicationContext(),HomeMenuActivity.class);
                 startActivity(intent);
             }
         });

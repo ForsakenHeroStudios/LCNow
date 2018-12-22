@@ -471,34 +471,34 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param v the view which called this method
      */
-    public void request(View v) {
-        String emailBody = "Hi Jason,\n\n" +
-                "I'm with " + organizationEdit.getText() +
-                " and we would like to add our event, " + titleEdit.getText() +
-                " to the LC events calendar." +
-                " It will take place at " + editLocation.getText() +
-                " on " + editDate.getText() + " at " + editTime.getText() + ". " +
-                "The description is below, and the image is attached.\n\n" +
-                "Thank you for your time,\n" + nameEdit.getText() + "\n\n" +
-                editDescription.getText() + "\n\n" +
-                "Sent with the LC Now App";
-        String[] CC = {""};
-        hideSoftKeyboard(MainActivity.this);
-        Intent emailIntent = new Intent(Intent.ACTION_SEND);
-        emailIntent.setData(Uri.parse("mailto:"));
-        emailIntent.setType("text/plain");
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{MAIL_TO});
-        emailIntent.putExtra(Intent.EXTRA_CC, CC);
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Event posting request");
-        emailIntent.putExtra(Intent.EXTRA_TEXT, emailBody);
-        try {
-            startActivity(Intent.createChooser(emailIntent, "Send email"));
-            finish();
-        } catch (android.content.ActivityNotFoundException e) {
-            Toast.makeText(MainActivity.this, "No email client installed.", Toast.LENGTH_LONG).show();
-        }
-
-    }
+//    public void request(View v) {
+//        String emailBody = "Hi Jason,\n\n" +
+//                "I'm with " + organizationEdit.getText() +
+//                " and we would like to add our event, " + titleEdit.getText() +
+//                " to the LC events calendar." +
+//                " It will take place at " + editLocation.getText() +
+//                " on " + editDate.getText() + " at " + editTime.getText() + ". " +
+//                "The description is below, and the image is attached.\n\n" +
+//                "Thank you for your time,\n" + nameEdit.getText() + "\n\n" +
+//                editDescription.getText() + "\n\n" +
+//                "Sent with the LC Now App";
+//        String[] CC = {""};
+//        hideSoftKeyboard(MainActivity.this);
+//        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+//        emailIntent.setData(Uri.parse("mailto:"));
+//        emailIntent.setType("text/plain");
+//        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{MAIL_TO});
+//        emailIntent.putExtra(Intent.EXTRA_CC, CC);
+//        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Event posting request");
+//        emailIntent.putExtra(Intent.EXTRA_TEXT, emailBody);
+//        try {
+//            startActivity(Intent.createChooser(emailIntent, "Send email"));
+//            finish();
+//        } catch (android.content.ActivityNotFoundException e) {
+//            Toast.makeText(MainActivity.this, "No email client installed.", Toast.LENGTH_LONG).show();
+//        }
+//
+//    }
 
     /**
      * Further attempts to improve bottom navigation appearance
@@ -585,7 +585,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * hides the keyboard
      */
-    private static void hideSoftKeyboard(Activity activity) {
+    public static void hideSoftKeyboard(Activity activity) {
         InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
         View currentFocus = activity.getCurrentFocus();
         if (currentFocus == null) {

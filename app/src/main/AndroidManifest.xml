@@ -26,6 +26,9 @@
             android:name=".MainActivity"
             android:label="@string/app_name">
         </activity>
+        <activity android:name=".HomeMenuActivity" />
+        <activity android:name=".RequestAddEventActivity" />
+
         <receiver android:name=".EventNotificationReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
