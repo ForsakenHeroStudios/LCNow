@@ -1,5 +1,6 @@
 package com.example.stephen.todaylc;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Fragment;
@@ -15,12 +16,16 @@ import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.design.internal.BottomNavigationMenuView;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.MenuView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -78,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
     // the email to request to add an event is sent to this address
     private final String MAIL_TO = "sbaker@lclark.edu"; // TODO: change this to Jason's email
     private static AlarmManager alarmManager;
+    private DrawerLayout drawerLayout;
+    private NavigationView navigationView;
 
     private SQLiteDatabase db;
 
@@ -110,6 +117,14 @@ public class MainActivity extends AppCompatActivity {
         }
         c.close();
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        //lots of good drawable stuff here: https://github.com/google/material-design-icons
+        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_black_18dp);
+
+
         alarmManager = (AlarmManager) App.getApplication().getSystemService(Context.ALARM_SERVICE);
 
         subList = new ArrayList<>();
@@ -120,6 +135,61 @@ public class MainActivity extends AppCompatActivity {
 
         linearLayoutMain = findViewById(R.id.linearLayoutMain);
 
+        drawerLayout = findViewById(R.id.drawer_layout);
+        drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+
+            }
+
+            @Override
+            public void onDrawerOpened(@NonNull View drawerView) {
+                hideSoftKeyboard(MainActivity.this);
+            }
+
+            @Override
+            public void onDrawerClosed(@NonNull View drawerView) {
+
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {
+
+            }
+        });
+        navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                item.setChecked(true);
+                drawerLayout.closeDrawers();
+
+                //TODO: swap views here
+                switch (item.getItemId()) {
+                    case R.id.drawer_today:
+                        setTitle("Today at LC");
+                        linearLayoutMain.setVisibility(View.INVISIBLE);
+                        calendarView.setVisibility(View.INVISIBLE);
+                        searchLayout.setVisibility(View.VISIBLE);
+                        groupViewLayout.setVisibility(View.INVISIBLE);
+                        hideSoftKeyboard(MainActivity.this);
+                        createEventsToShow();
+                        searchEdit.setVisibility(View.VISIBLE);
+                        break;
+                    case R.id.drawer_group:
+                        setTitle("Find a group");
+                        linearLayoutMain.setVisibility(View.INVISIBLE);
+                        calendarView.setVisibility(View.INVISIBLE);
+                        searchLayout.setVisibility(View.INVISIBLE);
+                        groupViewLayout.setVisibility(View.VISIBLE);
+                        hideSoftKeyboard(MainActivity.this);
+                        break;
+                }
+                return true;
+            }
+        });
+
+
         // add event initialization
         editDate = findViewById(R.id.editTextDate);
         editDescription = findViewById(R.id.editTextDescription);
@@ -129,14 +199,6 @@ public class MainActivity extends AppCompatActivity {
         organizationEdit = findViewById(R.id.editTextOrganization);
         nameEdit = findViewById(R.id.editTextName);
         titleEdit = findViewById(R.id.editTextEventTitle);
-
-        addEventLayout = findViewById(R.id.addEventLayout);
-        addEventLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hideSoftKeyboard(MainActivity.this);
-            }
-        });
 
         //initialize bottom navigation view
         bottomNavigationView = findViewById(R.id.navigation);
@@ -277,6 +339,17 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                drawerLayout.openDrawer(GravityCompat.START);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     public void changeSubState(View v) {
         int counter = 0;
@@ -427,7 +500,6 @@ public class MainActivity extends AppCompatActivity {
                 setTitle("Today at LC");
                 linearLayoutMain.setVisibility(View.INVISIBLE);
                 calendarView.setVisibility(View.INVISIBLE);
-                addEventLayout.setVisibility(View.INVISIBLE);
                 searchLayout.setVisibility(View.VISIBLE);
                 groupViewLayout.setVisibility(View.INVISIBLE);
                 hideSoftKeyboard(MainActivity.this);
@@ -438,16 +510,6 @@ public class MainActivity extends AppCompatActivity {
                 setTitle("Month view");
                 linearLayoutMain.setVisibility(View.INVISIBLE);
                 calendarView.setVisibility(View.VISIBLE);
-                addEventLayout.setVisibility(View.INVISIBLE);
-                searchLayout.setVisibility(View.INVISIBLE);
-                groupViewLayout.setVisibility(View.INVISIBLE);
-                hideSoftKeyboard(MainActivity.this);
-                return true;
-            case R.id.navigation_add_event:
-                setTitle("Request to post an event");
-                linearLayoutMain.setVisibility(View.INVISIBLE);
-                calendarView.setVisibility(View.INVISIBLE);
-                addEventLayout.setVisibility(View.VISIBLE);
                 searchLayout.setVisibility(View.INVISIBLE);
                 groupViewLayout.setVisibility(View.INVISIBLE);
                 hideSoftKeyboard(MainActivity.this);
@@ -456,7 +518,6 @@ public class MainActivity extends AppCompatActivity {
                 setTitle("Find a group");
                 linearLayoutMain.setVisibility(View.INVISIBLE);
                 calendarView.setVisibility(View.INVISIBLE);
-                addEventLayout.setVisibility(View.INVISIBLE);
                 searchLayout.setVisibility(View.INVISIBLE);
                 groupViewLayout.setVisibility(View.VISIBLE);
                 hideSoftKeyboard(MainActivity.this);

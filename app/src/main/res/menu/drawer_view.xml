@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/drawer_today"
+            android:icon="@mipmap/today"
+            android:title="today" />
+        <item
+            android:id="@+id/drawer_group"
+            android:icon="@drawable/lcnowicon"
+            android:title="group" />
+
+    </group>
+</menu>
