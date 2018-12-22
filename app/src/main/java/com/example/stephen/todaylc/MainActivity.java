@@ -68,8 +68,6 @@ public class MainActivity extends AppCompatActivity {
     private static ArrayList<Event> eventArrayListToShow;
     // calendar to select events occurring on a certain day that the user would like to be shown
     private CalendarView calendarView;
-    // current form of navigation between views
-    private BottomNavigationView bottomNavigationView;
     // button that sends the user from the request to add event page to an email service of their choice
     private Button requestButton;
     // various text fields
@@ -133,8 +131,6 @@ public class MainActivity extends AppCompatActivity {
 
         day = SDF.format(new Date());
 
-        linearLayoutMain = findViewById(R.id.linearLayoutMain);
-
         drawerLayout = findViewById(R.id.drawer_layout);
         drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
             @Override
@@ -164,11 +160,9 @@ public class MainActivity extends AppCompatActivity {
                 item.setChecked(true);
                 drawerLayout.closeDrawers();
 
-                //TODO: swap views here
                 switch (item.getItemId()) {
                     case R.id.drawer_today:
                         setTitle("Today at LC");
-                        linearLayoutMain.setVisibility(View.INVISIBLE);
                         calendarView.setVisibility(View.INVISIBLE);
                         searchLayout.setVisibility(View.VISIBLE);
                         groupViewLayout.setVisibility(View.INVISIBLE);
@@ -178,7 +172,6 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case R.id.drawer_group:
                         setTitle("Find a group");
-                        linearLayoutMain.setVisibility(View.INVISIBLE);
                         calendarView.setVisibility(View.INVISIBLE);
                         searchLayout.setVisibility(View.INVISIBLE);
                         groupViewLayout.setVisibility(View.VISIBLE);
@@ -189,45 +182,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        // add event initialization
-        editDate = findViewById(R.id.editTextDate);
-        editDescription = findViewById(R.id.editTextDescription);
-        editLocation = findViewById(R.id.editTextLocation);
-        editTime = findViewById(R.id.editTextTime);
-        emailEdit = findViewById(R.id.editTextEmail);
-        organizationEdit = findViewById(R.id.editTextOrganization);
-        nameEdit = findViewById(R.id.editTextName);
-        titleEdit = findViewById(R.id.editTextEventTitle);
-
-        //initialize bottom navigation view
-        bottomNavigationView = findViewById(R.id.navigation);
-        bottomNavigationView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
-        // attempt to make bottom navigation appear neater
-        for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
-            removeTextLabel(bottomNavigationView, bottomNavigationView.getMenu().getItem(i).getItemId());
-        }
-        BottomNavigationMenuView menuView = (BottomNavigationMenuView) bottomNavigationView.getChildAt(0);
-        for (int i = 0; i < menuView.getChildCount(); i++) {
-            final View iconView = menuView.getChildAt(i).findViewById(android.support.design.R.id.icon);
-            final ViewGroup.LayoutParams layoutParams = iconView.getLayoutParams();
-            final DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-            layoutParams.height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 64, displayMetrics);
-            layoutParams.width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 64, displayMetrics);
-            iconView.setLayoutParams(layoutParams);
-        }
-
-        // gives the icons colors
-        bottomNavigationView.setItemIconTintList(null);
-
         // main  event display initialization
-        eventRecyclerView = (RecyclerView) findViewById(R.id.eventRecyclerView);
-        eventRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         eventArrayList = new ArrayList<>();
         eventArrayListToShow = new ArrayList<>();
         eventAdapter = new EventAdapter(this, eventArrayListToShow);
-        eventRecyclerView.setAdapter(eventAdapter);
 
         createListData();
 
@@ -272,7 +230,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //group view initialization
-        //TODO: do more testing on whether or not this works, it seems to tho. Also make it more efficient, seems to hang a bit when subbing
         groupViewLayout = findViewById(R.id.groupLayout);
         groupViewLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -527,61 +484,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Called when the request button is pressed. Sends formatted user inputs to third party email
-     * service of the user's choice.
-     *
-     * @param v the view which called this method
-     */
-//    public void request(View v) {
-//        String emailBody = "Hi Jason,\n\n" +
-//                "I'm with " + organizationEdit.getText() +
-//                " and we would like to add our event, " + titleEdit.getText() +
-//                " to the LC events calendar." +
-//                " It will take place at " + editLocation.getText() +
-//                " on " + editDate.getText() + " at " + editTime.getText() + ". " +
-//                "The description is below, and the image is attached.\n\n" +
-//                "Thank you for your time,\n" + nameEdit.getText() + "\n\n" +
-//                editDescription.getText() + "\n\n" +
-//                "Sent with the LC Now App";
-//        String[] CC = {""};
-//        hideSoftKeyboard(MainActivity.this);
-//        Intent emailIntent = new Intent(Intent.ACTION_SEND);
-//        emailIntent.setData(Uri.parse("mailto:"));
-//        emailIntent.setType("text/plain");
-//        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{MAIL_TO});
-//        emailIntent.putExtra(Intent.EXTRA_CC, CC);
-//        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Event posting request");
-//        emailIntent.putExtra(Intent.EXTRA_TEXT, emailBody);
-//        try {
-//            startActivity(Intent.createChooser(emailIntent, "Send email"));
-//            finish();
-//        } catch (android.content.ActivityNotFoundException e) {
-//            Toast.makeText(MainActivity.this, "No email client installed.", Toast.LENGTH_LONG).show();
-//        }
-//
-//    }
-
-    /**
-     * Further attempts to improve bottom navigation appearance
-     */
-    private void removeTextLabel(@NonNull BottomNavigationView bottomNavigationView, @IdRes int menuItemId) {
-        View view = bottomNavigationView.findViewById(menuItemId);
-        if (view == null) return;
-        if (view instanceof MenuView.ItemView) {
-            ViewGroup viewGroup = (ViewGroup) view;
-            int padding = 0;
-            for (int i = 0; i < viewGroup.getChildCount(); i++) {
-                View v = viewGroup.getChildAt(i);
-                if (v instanceof ViewGroup) {
-                    padding = v.getHeight();
-                    viewGroup.removeViewAt(i);
-                }
-            }
-            viewGroup.setPadding(view.getPaddingLeft(), (viewGroup.getPaddingTop() + padding) / 2, view.getPaddingRight(), view.getPaddingBottom());
-        }
-    }
-
-    /**
      * Populates event array
      */
     private void createListData() {
@@ -678,7 +580,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent keyEvent) {
-        if (keyCode == KeyEvent.KEYCODE_ENTER && addEventLayout.getVisibility() == View.INVISIBLE) {
+        if (keyCode == KeyEvent.KEYCODE_ENTER) {
             hideSoftKeyboard(this);
             return true;
         }
