@@ -14,6 +14,7 @@ public class Event {
     private String startEnd;
     private String[] tags;
     private boolean firstOfDay;
+    private String url;
 
     @Override
     public boolean equals(Object o) {
@@ -47,7 +48,7 @@ public class Event {
                 '}';
     }
 
-    public Event(String title, String description, String time, String imageURL, String location, String group, String monthDay, String startEnd, String[] tags, boolean firstOfDay) {
+    public Event(String title, String description, String time, String imageURL, String location, String group, String monthDay, String startEnd, String[] tags, boolean firstOfDay, String url) {
         this.title = title;
         this.description = description;
         this.time = time;
@@ -58,6 +59,15 @@ public class Event {
         this.startEnd = startEnd;
         this.tags = tags;
         this.firstOfDay = firstOfDay;
+        this.url = url;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public boolean isFirstOfDay() {

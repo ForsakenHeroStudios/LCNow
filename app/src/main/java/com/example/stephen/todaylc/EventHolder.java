@@ -1,9 +1,13 @@
 package com.example.stephen.todaylc;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.webkit.WebView;
@@ -21,10 +25,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+
 public class EventHolder extends RecyclerView.ViewHolder {
     private TextView eventTitle, eventTime, eventLocation, dividerTextView;
     private WebView  eventDescription;
     private ImageView imageView;
+    private CardView card;
 
     public EventHolder(View itemView) {
         super(itemView);
@@ -34,13 +40,33 @@ public class EventHolder extends RecyclerView.ViewHolder {
         imageView = itemView.findViewById(R.id.imageView);
         eventLocation = itemView.findViewById(R.id.event_location);
         dividerTextView = itemView.findViewById(R.id.dividerTextView);
+        card = itemView.findViewById(R.id.eventCard);
     }
 
-    public void setDetails(Event event) {
+    public void setDetails(final Event event) {
+        View.OnTouchListener onTouchListener = new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent motionEvent) {
+                sendToEventDetail(event);
+                return true;
+            }
+        };
         eventTitle.setText(event.getTitle());
         eventDescription.getSettings().setJavaScriptEnabled(true);
         eventDescription.setWebViewClient(new WebViewClient());
         eventDescription.loadData(event.getDescription(),"text/html","UTF-8");
+
+        //separate method for the webview is used here because it cannot detect clicks, only touch events
+        // TODO: if a url appears in the webview, go to that instead when clicked on.
+        eventDescription.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent motionEvent) {
+                if (motionEvent.getAction()==MotionEvent.ACTION_UP) {
+                    sendToEventDetail(event);
+                }
+                return true;
+            }
+        });
         Calendar calendar = Calendar.getInstance();
         String time = event.getTime();
         calendar.set(Integer.parseInt(time.substring(0, 4)), Integer.parseInt(time.substring(5, 7)) - 1, Integer.parseInt(time.substring(8, 10)));
@@ -63,9 +89,28 @@ public class EventHolder extends RecyclerView.ViewHolder {
                 imageView.setImageBitmap(newImage);
             } catch (Exception e) { }
         }
+        card.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i("rid","web: "+R.id.event_description_web);
+                Log.i("rid","card: "+R.id.eventCard);
+                Log.i("rid","got: "+v.getId());
+
+                if (v.getId() != R.id.event_description_web) {
+                    sendToEventDetail(event);
+                }
+            }
+        });
     }
 
-    public class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
+    private void sendToEventDetail(Event event) {
+        Intent intent = new Intent(App.getContext(), EventDetailActivity.class);
+        intent.putExtra("url",event.getUrl());
+        App.getApplication().startActivity(intent);
+    }
+
+
+    public static class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
 
         @Override
         protected Bitmap doInBackground(String... urls) {

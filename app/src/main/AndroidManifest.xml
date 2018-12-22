@@ -28,6 +28,7 @@
         </activity>
         <activity android:name=".HomeMenuActivity" />
         <activity android:name=".RequestAddEventActivity" />
+        <activity android:name=".EventDetailActivity" />
 
         <receiver android:name=".EventNotificationReceiver" android:exported="true">
             <intent-filter>

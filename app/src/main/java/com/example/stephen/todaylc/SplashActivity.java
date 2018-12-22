@@ -144,7 +144,14 @@ public class SplashActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    Event tempEvent = new Event(title, description, time, img, loc, group,monthDay,startEnd,tags,false);
+                    String url = null;
+                    try {
+                        url = eve.getString("url");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    Event tempEvent = new Event(title, description, time, img, loc, group,monthDay,startEnd,tags,false, url);
 
                     Log.d("event", tempEvent.toString());
                     result.add(tempEvent);
