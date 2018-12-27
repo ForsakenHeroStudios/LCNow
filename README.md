@@ -41,5 +41,5 @@ Next steps
 - Perhaps give people Pio Points for reserving and closing reservations (with a certain number of max points per day) to incentivize people to study and also make the service more useful to others looking for an open room
 - Have a Pio Points leaderboard, give something to winners at the end of each semester (LC Now t-shirt?)
 - Need an online store page
-- option to watch an add and get Pio Points? (Do we let ourselves stoop that low?)
+- option to watch an ad and get Pio Points? (Do we let ourselves stoop that low?)
 - LC Now merch?
