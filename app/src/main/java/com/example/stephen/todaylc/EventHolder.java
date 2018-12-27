@@ -10,10 +10,14 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.chauthai.swipereveallayout.SwipeRevealLayout;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,13 +31,19 @@ import java.util.Locale;
 
 
 public class EventHolder extends RecyclerView.ViewHolder {
-    private TextView eventTitle, eventTime, eventLocation, dividerTextView;
+    private TextView eventTitle, eventTime, eventLocation, dividerTextView, notifyText;
     private WebView  eventDescription;
     private ImageView imageView;
-    private CardView card;
+    private EventCardView card;
+    private SuperSwipeRevealLayout swipeRevealLayout;
+    private LinearLayout swipeLinearLayout;
+    private View itView;
+    private int position;
+
 
     public EventHolder(View itemView) {
         super(itemView);
+        itView = itemView;
         eventTitle = itemView.findViewById(R.id.event_title);
         eventDescription = itemView.findViewById(R.id.event_description_web);
         eventTime = itemView.findViewById(R.id.event_time);
@@ -41,9 +51,24 @@ public class EventHolder extends RecyclerView.ViewHolder {
         eventLocation = itemView.findViewById(R.id.event_location);
         dividerTextView = itemView.findViewById(R.id.dividerTextView);
         card = itemView.findViewById(R.id.eventCard);
+        swipeRevealLayout = itemView.findViewById(R.id.swipeRevealLayout);
+        notifyText = itemView.findViewById(R.id.notifyText);
+        swipeLinearLayout = itemView.findViewById(R.id.swipeLinearLayout);
+//        SwipeRevealLayout swipeRevealLayout = itemView.findViewById(R.id.swipeRevealLayout);
+//        card.addText(notifyText);
+
+//        card.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+//            @Override
+//            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+//                Log.d("layoutChange","top "+top+" bot "+bottom);
+//                setHeight(bottom);
+//            }
+//        });
     }
 
-    public void setDetails(final Event event) {
+    public void setDetails(final Event event, int position) {
+        this.position = position;
+        card.setEvent(event);
         View.OnTouchListener onTouchListener = new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent motionEvent) {
@@ -52,9 +77,7 @@ public class EventHolder extends RecyclerView.ViewHolder {
             }
         };
         eventTitle.setText(event.getTitle());
-        eventDescription.getSettings().setJavaScriptEnabled(true);
-        eventDescription.setWebViewClient(new WebViewClient());
-        eventDescription.loadData(event.getDescription(),"text/html","UTF-8");
+
 
         //separate method for the webview is used here because it cannot detect clicks, only touch events
         // TODO: if a url appears in the webview, go to that instead when clicked on.
@@ -92,15 +115,63 @@ public class EventHolder extends RecyclerView.ViewHolder {
         card.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i("rid","web: "+R.id.event_description_web);
-                Log.i("rid","card: "+R.id.eventCard);
-                Log.i("rid","got: "+v.getId());
-
                 if (v.getId() != R.id.event_description_web) {
                     sendToEventDetail(event);
                 }
             }
         });
+        eventDescription.getSettings().setJavaScriptEnabled(true);
+        eventDescription.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d("changer3",event.getTitle()+" "+card.getMyheight());
+                sizeChanged();
+            }
+        });
+        eventDescription.loadData(event.getDescription(),"text/html","UTF-8");
+
+//        card.requestLayout();
+//        Log.i("tagtest", itView.getTag().toString()+" "+getAdapterPosition());
+////        itView.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
+//        swipeRevealLayout.measure(SwipeRevealLayout.MeasureSpec.UNSPECIFIED,SwipeRevealLayout.MeasureSpec.UNSPECIFIED);
+//        ViewGroup.LayoutParams linParams =   swipedLayout.getLayoutParams();
+//        linParams.height = card.getMeasuredHeight();
+//        Log.i("height",getAdapterPosition()+" "+event.getTitle()+" "+card.getHeight()+" "+card.getMeasuredHeight()+" "+itView.getMeasuredHeight()+" "+itView.getHeight());
+//        swipedLayout.setLayoutParams(linParams);
+    }
+
+//    public SwipeRevealLayout getSwipeRevealLayout() {
+//        return swipeRevealLayout;
+//    }
+
+    public SuperSwipeRevealLayout getSwipeRevealLayout() {
+        return swipeRevealLayout;
+    }
+
+    public void sizeChanged() {
+//        swipeRevealLayout.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
+//        swipeRevealLayout.getChildAt(0).measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
+//        swipeRevealLayout.getChildAt(1).measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
+//        ViewGroup.LayoutParams cardParams = swipeRevealLayout.getChildAt(1).getLayoutParams();
+        ViewGroup.LayoutParams linearParams = swipeRevealLayout.getChildAt(0).getLayoutParams();
+//        Log.d("params",swipeRevealLayout.getChildAt(0).getTag().toString()+" "+linearParams.height+" "+swipeRevealLayout.getChildAt(1).getTag().toString()+" "+cardParams.height);
+        Log.d("params",""+swipeRevealLayout.getMeasuredHeight());
+        linearParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
+        swipeRevealLayout.getChildAt(0).setLayoutParams(linearParams);
+    }
+
+    public EventCardView getCard() {
+        return card;
+    }
+
+    public void setHeight(int height) {
+        ViewGroup.LayoutParams layoutParams = notifyText.getLayoutParams();
+        layoutParams.height = height;
+        notifyText.setLayoutParams(layoutParams);
+        notifyText.requestLayout();
+        notifyText.measure(View.MeasureSpec.makeMeasureSpec(layoutParams.width, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(layoutParams.height, View.MeasureSpec.EXACTLY));
+        Log.d("changer4","height: "+height+", "+eventTitle.getText()+", "+notifyText.getMeasuredHeight()+", "+layoutParams.height);
     }
 
     private void sendToEventDetail(Event event) {
@@ -109,6 +180,9 @@ public class EventHolder extends RecyclerView.ViewHolder {
         App.getApplication().startActivity(intent);
     }
 
+    public void setPosition(int i) {
+        card.setPosition(i);
+    }
 
     public static class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
 

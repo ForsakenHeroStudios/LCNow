@@ -3,12 +3,16 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/drawer_today"
-            android:icon="@mipmap/today"
-            android:title="today" />
+            android:icon="@android:drawable/ic_menu_today"
+            android:title="Events" />
         <item
             android:id="@+id/drawer_group"
-            android:icon="@drawable/lcnowicon"
-            android:title="group" />
+            android:icon="@android:drawable/ic_menu_agenda"
+            android:title="Groups" />
+        <item
+            android:id="@+id/drawer_subs"
+            android:icon="@android:drawable/stat_notify_more"
+            android:title="Subscribed Events" />
 
     </group>
 </menu>

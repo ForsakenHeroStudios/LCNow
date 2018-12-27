@@ -35,6 +35,7 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -59,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView eventRecyclerView, searchRecyclerView, groupRecyclerView;
     // a list of all event groups
     private ListView groupListView;
-    private static EventAdapter eventAdapter;
+    public static EventAdapter eventAdapter;
     private GroupAdapter groupAdapter;
     private ArrayList<Group> allGroups, groupsToShow;
     private static ArrayList<Event> eventArrayList;
@@ -83,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private static AlarmManager alarmManager;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
+    LinearLayoutManager linearLayoutManager;
 
     private SQLiteDatabase db;
 
@@ -115,12 +117,14 @@ public class MainActivity extends AppCompatActivity {
         }
         c.close();
 
+        linearLayoutManager = new LinearLayoutManager(this);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         android.support.v7.app.ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         //lots of good drawable stuff here: https://github.com/google/material-design-icons
-        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_black_18dp);
+//        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_black_18dp);
 
 
         alarmManager = (AlarmManager) App.getApplication().getSystemService(Context.ALARM_SERVICE);
@@ -154,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         navigationView = findViewById(R.id.nav_view);
+        navigationView.getMenu().getItem(0).setChecked(true);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -176,6 +181,15 @@ public class MainActivity extends AppCompatActivity {
                         searchLayout.setVisibility(View.INVISIBLE);
                         groupViewLayout.setVisibility(View.VISIBLE);
                         hideSoftKeyboard(MainActivity.this);
+                        break;
+                    case R.id.drawer_subs:
+                        setTitle("Current Subscribed Events");
+                        calendarView.setVisibility(View.INVISIBLE);
+                        searchLayout.setVisibility(View.VISIBLE);
+                        groupViewLayout.setVisibility(View.INVISIBLE);
+                        hideSoftKeyboard(MainActivity.this);
+                        showSubbedEvents();
+                        searchEdit.setVisibility(View.GONE);
                         break;
                 }
                 return true;
@@ -206,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
         searchLayout = findViewById(R.id.searchLayout);
         searchEdit = findViewById(R.id.searchEdit);
         searchRecyclerView = findViewById(R.id.searchRecyclerView);
-        searchRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        searchRecyclerView.setLayoutManager(linearLayoutManager);
         searchRecyclerView.setAdapter(eventAdapter);
         searchEdit.addTextChangedListener(new TextWatcher() {
             @Override
@@ -279,6 +293,16 @@ public class MainActivity extends AppCompatActivity {
             createEventNotification(e);
         }
 
+//        for (int i = 0; i < linearLayoutManager.findLastVisibleItemPosition(); i++) {
+//            Log.i("testy",""+i);
+//            RecyclerView.ViewHolder v = eventRecyclerView.findViewHolderForAdapterPosition(i);
+//            v.itemView.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
+//            int height = ((EventHolder)v).getCard().getMeasuredHeight();
+//            ((EventHolder)v).setHeight(height);
+//            eventAdapter.notifyDataSetChanged();
+//        }
+
+
 
 //        groupListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 //            @Override
@@ -295,6 +319,7 @@ public class MainActivity extends AppCompatActivity {
 //                return true;
 //            }
 //        });
+
     }
 
     @Override
@@ -578,6 +603,23 @@ public class MainActivity extends AppCompatActivity {
         hideSoftKeyboard((Activity) (searchLayout.getContext()));
     }
 
+    public void showSubbedEvents() {
+        eventArrayListToShow.clear();
+        String currentDay = "";
+        for (Event e : subList) {
+            e.setFirstOfDay(false);
+            String eventDay = e.getTime().substring(0, 10);
+            if (eventDay.equals(currentDay)) {
+                e.setFirstOfDay(false);
+            } else {
+                e.setFirstOfDay(true);
+                currentDay = e.getTime().substring(0, 10);
+            }
+            eventArrayListToShow.add(e);
+        }
+        eventAdapter.notifyDataSetChanged();
+    }
+
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent keyEvent) {
         if (keyCode == KeyEvent.KEYCODE_ENTER) {
@@ -587,5 +629,20 @@ public class MainActivity extends AppCompatActivity {
         return super.onKeyUp(keyCode, keyEvent);
     }
 
+//    @Override
+//    protected void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        if (eventAdapter != null) {
+//            eventAdapter.saveStates(outState);
+//        }
+//    }
+//
+//    @Override
+//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+//        super.onRestoreInstanceState(savedInstanceState);
+//        if (eventAdapter != null) {
+//            eventAdapter.restoreStates(savedInstanceState);
+//        }
+//    }
 
 }
