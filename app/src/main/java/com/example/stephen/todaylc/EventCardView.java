@@ -13,14 +13,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class EventCardView extends CardView {
-    private int myheight;
-//    private TextView notifyView;
-    private Event event;
     private int position;
-
-    public int getMyheight() {
-        return myheight;
-    }
 
     public EventCardView(@NonNull Context context) {
         super(context);
@@ -39,15 +32,10 @@ public class EventCardView extends CardView {
         this.position = position;
     }
 
-    public void setEvent(Event event) {
-        this.event=event;
-    }
-
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        myheight = h;
         MainActivity.eventAdapter.getViewHolders().get(position).sizeChanged();
     }
 

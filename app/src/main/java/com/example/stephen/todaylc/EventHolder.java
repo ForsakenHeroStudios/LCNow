@@ -35,31 +35,13 @@ public class EventHolder extends RecyclerView.ViewHolder {
     private EventCardView card;
     private SuperSwipeRevealLayout swipeRevealLayout;
     private LinearLayout swipeLinearLayout;
-    private View itView;
     private int position;
     private boolean notify;
-
-    public boolean isNotify() {
-        return notify;
-    }
-
-    public void setNotify(boolean notify) {
-        this.notify = notify;
-        if (notify) {
-            notifyText.setText("Cancel\n Notification");
-            notifyText.setBackgroundColor(Color.RED);
-        } else {
-            notifyText.setText("Add\n Notification");
-            notifyText.setBackgroundColor(App.getApplication().getResources().getColor(R.color.colorPrimary));
-        }
-    }
-
-
+    private boolean notifyNeedsChange;
 
 
     public EventHolder(View itemView) {
         super(itemView);
-        itView = itemView;
         eventTitle = itemView.findViewById(R.id.event_title);
         eventDescription = itemView.findViewById(R.id.event_description_web);
         eventTime = itemView.findViewById(R.id.event_time);
@@ -71,13 +53,12 @@ public class EventHolder extends RecyclerView.ViewHolder {
         notifyText = itemView.findViewById(R.id.notifyText);
         swipeLinearLayout = itemView.findViewById(R.id.swipeLinearLayout);
         notify = false;
+        notifyNeedsChange=false;
     }
-
 
 
     public void setDetails(final Event event, int position) {
         this.position = position;
-        card.setEvent(event);
         View.OnTouchListener onTouchListener = new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent motionEvent) {
@@ -148,12 +129,17 @@ public class EventHolder extends RecyclerView.ViewHolder {
                 }
                 swipeRevealLayout.close(true);
                 notify = !notify;
+                notifyNeedsChange = true;
+
             }
         });
         swipeRevealLayout.setSwipeListener(new SwipeRevealLayout.SwipeListener() {
             @Override
             public void onClosed(SwipeRevealLayout view) {
-                changeNotifyText();
+                if (notifyNeedsChange) {
+                    changeNotifyText();
+                    notifyNeedsChange = false;
+                }
             }
 
             @Override
@@ -183,7 +169,6 @@ public class EventHolder extends RecyclerView.ViewHolder {
         swipeRevealLayout.close(true);
     }
 
-
     public SuperSwipeRevealLayout getSwipeRevealLayout() {
         return swipeRevealLayout;
     }
@@ -194,19 +179,6 @@ public class EventHolder extends RecyclerView.ViewHolder {
         swipeRevealLayout.getChildAt(0).setLayoutParams(linearParams);
     }
 
-    public EventCardView getCard() {
-        return card;
-    }
-
-    public void setHeight(int height) {
-        ViewGroup.LayoutParams layoutParams = notifyText.getLayoutParams();
-        layoutParams.height = height;
-        notifyText.setLayoutParams(layoutParams);
-        notifyText.requestLayout();
-        notifyText.measure(View.MeasureSpec.makeMeasureSpec(layoutParams.width, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(layoutParams.height, View.MeasureSpec.EXACTLY));
-        Log.d("changer4","height: "+height+", "+eventTitle.getText()+", "+notifyText.getMeasuredHeight()+", "+layoutParams.height);
-    }
-
     private void sendToEventDetail(Event event) {
         Intent intent = new Intent(App.getContext(), EventDetailActivity.class);
         intent.putExtra("url",event.getUrl());
@@ -215,6 +187,17 @@ public class EventHolder extends RecyclerView.ViewHolder {
 
     public void setPosition(int i) {
         card.setPosition(i);
+    }
+
+    public void setNotify(boolean notify) {
+        this.notify = notify;
+        if (notify) {
+            notifyText.setText("Cancel\n Notification");
+            notifyText.setBackgroundColor(Color.RED);
+        } else {
+            notifyText.setText("Add\n Notification");
+            notifyText.setBackgroundColor(App.getApplication().getResources().getColor(R.color.colorPrimary));
+        }
     }
 
     public static class ImageDownloader extends AsyncTask<String, Void, Bitmap> {

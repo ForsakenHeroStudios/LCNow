@@ -36,6 +36,7 @@ public class SuperSwipeRevealLayout extends SwipeRevealLayout {
         final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
 
         int desiredWidth = 0;
+        // changed from desiredHeight = 0, because the desired height is that of the card view
         int desiredHeight = getChildAt(1).getMeasuredHeight();
 
         // first find the largest child

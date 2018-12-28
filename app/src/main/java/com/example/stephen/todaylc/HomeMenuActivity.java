@@ -21,16 +21,14 @@ public class HomeMenuActivity extends AppCompatActivity {
                                     int position, long id) {
                 switch (position) {
                     case 0:
-                        Intent intent = new Intent(getApplicationContext(),MainActivity.class);
-                        startActivity(intent);
+                        Intent mainIntent = new Intent(getApplicationContext(),MainActivity.class);
+                        startActivity(mainIntent);
                         break;
                     case 1:
-                        Intent intent1 = new Intent(getApplicationContext(),RequestAddEventActivity.class);
-                        startActivity(intent1);
+                        Intent addEventIntent = new Intent(getApplicationContext(),RequestAddEventActivity.class);
+                        startActivity(addEventIntent);
                         break;
                 }
-                Toast.makeText(HomeMenuActivity.this, "" + position,
-                        Toast.LENGTH_SHORT).show();
             }
         });
     }

@@ -45,8 +45,8 @@ public class ImageAdapter extends BaseAdapter {
     // references to our images
     private Integer[] mThumbIds = {
             R.mipmap.today, R.mipmap.addevent,
-            R.drawable.ic_home_black_24dp, R.drawable.lcnowicon,
-            R.drawable.search
+            //TODO: change this icon to something food-related
+            android.R.drawable.ic_menu_gallery
     };
 
 }

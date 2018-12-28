@@ -56,10 +56,9 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
+    //TODO: Find a better solution than making fields static
     // A list of cards with relevant event info
-    private RecyclerView eventRecyclerView, searchRecyclerView, groupRecyclerView;
-    // a list of all event groups
-    private ListView groupListView;
+    private RecyclerView searchRecyclerView, groupRecyclerView;
     public static EventAdapter eventAdapter;
     private GroupAdapter groupAdapter;
     private ArrayList<Group> allGroups, groupsToShow;
@@ -69,18 +68,14 @@ public class MainActivity extends AppCompatActivity {
     private static ArrayList<Event> eventArrayListToShow;
     // calendar to select events occurring on a certain day that the user would like to be shown
     private CalendarView calendarView;
-    // button that sends the user from the request to add event page to an email service of their choice
-    private Button requestButton;
     // various text fields
-    private EditText nameEdit, emailEdit, organizationEdit, editDescription, editDate, editTime, editLocation, titleEdit, groupEdit;
+    private EditText groupEdit;
     private static EditText searchEdit;
     // date format to find which events should be displayed when a certain date is selected
     private final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
     // selected day
     private String day;
-    private static LinearLayout searchLayout, linearLayoutMain, addEventLayout, groupViewLayout;
-    // the email to request to add an event is sent to this address
-    private final String MAIL_TO = "sbaker@lclark.edu"; // TODO: change this to Jason's email
+    private static LinearLayout searchLayout, groupViewLayout;
     private static AlarmManager alarmManager;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
@@ -88,13 +83,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static SQLiteDatabase db;
 
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new BottomNavigationView.OnNavigationItemSelectedListener() {
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            return setSelectedView(item);
-        }
-    };
     private static Toolbar toolbar;
 
     // for more good stuff with eventRecyclerView: https://medium.com/@droidbyme/android-recyclerview-fca74609725e
@@ -135,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         android.support.v7.app.ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
+
         //lots of good drawable stuff here: https://github.com/google/material-design-icons
 //        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_black_18dp);
 
@@ -278,7 +267,6 @@ public class MainActivity extends AppCompatActivity {
                 createGroupsToShow(s.toString().toLowerCase());
             }
         });
-//        groupListView = findViewById(R.id.groupListView);
         groupRecyclerView = findViewById(R.id.groupRecyclerView);
         allGroups = new ArrayList<>();
         ArrayList<String> groupTitles = SplashActivity.groups;
@@ -290,47 +278,11 @@ public class MainActivity extends AppCompatActivity {
         groupAdapter = new GroupAdapter(groupsToShow, this);
         groupRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         groupRecyclerView.setAdapter(groupAdapter);
-//        groupListView.setAdapter(groupAdapter);
-//        groupListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                hideSoftKeyboard(MainActivity.this);
-//                showSelectedGroup(groupsToShow.get(position).getGroupName().toLowerCase());
-//                groupViewLayout.setVisibility(View.INVISIBLE);
-//                searchLayout.setVisibility(View.VISIBLE);
-//            }
-//        });
+
         addEventsToSubList();
         for (Event e : subList) {
             createEventNotification(e);
         }
-
-//        for (int i = 0; i < linearLayoutManager.findLastVisibleItemPosition(); i++) {
-//            Log.i("testy",""+i);
-//            RecyclerView.ViewHolder v = eventRecyclerView.findViewHolderForAdapterPosition(i);
-//            v.itemView.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
-//            int height = ((EventHolder)v).getCard().getMeasuredHeight();
-//            ((EventHolder)v).setHeight(height);
-//            eventAdapter.notifyDataSetChanged();
-//        }
-
-
-
-//        groupListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-//            @Override
-//            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-//                String groupSelected = groupsToShow.get(position);
-//                Cursor cursor = db.rawQuery("SELECT * FROM subs WHERE groups= '"+groupSelected+"'",null);
-//                if (cursor.getCount() == 0) {
-//                    db.execSQL("INSERT INTO subs (groups) VALUES ('" + groupSelected + "')");
-//                    addEventsToSubList();
-//                    createEventNotifications();
-//                }
-//                cursor.close();
-//                Log.i("saved to database", groupSelected);
-//                return true;
-//            }
-//        });
 
     }
 
@@ -345,6 +297,16 @@ public class MainActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (toolbar.getTitle().equals("Find a group") && groupViewLayout.getVisibility() != View.VISIBLE) {
+            searchLayout.setVisibility(View.INVISIBLE);
+            groupViewLayout.setVisibility(View.VISIBLE);
+        } else {
+            super.onBackPressed();
+        }
     }
 
     public static void manualAddSub(Event e) {
@@ -367,8 +329,9 @@ public class MainActivity extends AppCompatActivity {
         cancelEventNotification(e);
         if (toolbar.getTitle().equals("Current Subscribed Events")) {
             eventArrayListToShow.remove(e);
+            eventAdapter.notifyDataSetChanged();
         }
-        eventAdapter.notifyDataSetChanged();
+
     }
 
     public static ArrayList<Event> getSubList() {
@@ -532,43 +495,6 @@ public class MainActivity extends AppCompatActivity {
         // might want to look into effect of different flags
         PendingIntent pendingIntent = PendingIntent.getBroadcast(App.getContext(), requestID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         alarmManager.cancel(pendingIntent);
-    }
-
-    /**
-     * Switches the current view shown to the correct view
-     *
-     * @param item menu item selected
-     */
-    private boolean setSelectedView(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.navigation_today:
-                setTitle("Today at LC");
-                linearLayoutMain.setVisibility(View.INVISIBLE);
-                calendarView.setVisibility(View.INVISIBLE);
-                searchLayout.setVisibility(View.VISIBLE);
-                groupViewLayout.setVisibility(View.INVISIBLE);
-                hideSoftKeyboard(MainActivity.this);
-                createEventsToShow();
-                searchEdit.setVisibility(View.VISIBLE);
-                return true;
-            case R.id.navigation_thismonth:
-                setTitle("Month view");
-                linearLayoutMain.setVisibility(View.INVISIBLE);
-                calendarView.setVisibility(View.VISIBLE);
-                searchLayout.setVisibility(View.INVISIBLE);
-                groupViewLayout.setVisibility(View.INVISIBLE);
-                hideSoftKeyboard(MainActivity.this);
-                return true;
-            case R.id.navigation_groups:
-                setTitle("Find a group");
-                linearLayoutMain.setVisibility(View.INVISIBLE);
-                calendarView.setVisibility(View.INVISIBLE);
-                searchLayout.setVisibility(View.INVISIBLE);
-                groupViewLayout.setVisibility(View.VISIBLE);
-                hideSoftKeyboard(MainActivity.this);
-                return true;
-        }
-        return false;
     }
 
     /**
