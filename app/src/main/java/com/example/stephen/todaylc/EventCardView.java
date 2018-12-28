@@ -34,14 +34,6 @@ public class EventCardView extends CardView {
         super(context, attrs, defStyleAttr);
     }
 
-//    public void addText(TextView textView) {
-//        notifyView = textView;
-//    }
-//
-//    public TextView getNotifyView() {
-//        return notifyView;
-//    }
-
 
     public void setPosition(int position) {
         this.position = position;
@@ -56,12 +48,7 @@ public class EventCardView extends CardView {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         myheight = h;
-//        notifyView.setHeight(h);
-//        Log.d("changer", ""+event.getTitle()+" "+h);
         MainActivity.eventAdapter.getViewHolders().get(position).sizeChanged();
-//        for (EventHolder holder : MainActivity.eventAdapter.getViewHolders()) {
-//            holder.sizeChanged();
-//        }
     }
 
 }

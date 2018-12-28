@@ -3,14 +3,14 @@ package com.example.stephen.todaylc;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.AsyncTask;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
@@ -24,9 +24,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 
@@ -39,6 +37,24 @@ public class EventHolder extends RecyclerView.ViewHolder {
     private LinearLayout swipeLinearLayout;
     private View itView;
     private int position;
+    private boolean notify;
+
+    public boolean isNotify() {
+        return notify;
+    }
+
+    public void setNotify(boolean notify) {
+        this.notify = notify;
+        if (notify) {
+            notifyText.setText("Cancel\n Notification");
+            notifyText.setBackgroundColor(Color.RED);
+        } else {
+            notifyText.setText("Add\n Notification");
+            notifyText.setBackgroundColor(App.getApplication().getResources().getColor(R.color.colorPrimary));
+        }
+    }
+
+
 
 
     public EventHolder(View itemView) {
@@ -54,17 +70,10 @@ public class EventHolder extends RecyclerView.ViewHolder {
         swipeRevealLayout = itemView.findViewById(R.id.swipeRevealLayout);
         notifyText = itemView.findViewById(R.id.notifyText);
         swipeLinearLayout = itemView.findViewById(R.id.swipeLinearLayout);
-//        SwipeRevealLayout swipeRevealLayout = itemView.findViewById(R.id.swipeRevealLayout);
-//        card.addText(notifyText);
-
-//        card.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-//            @Override
-//            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-//                Log.d("layoutChange","top "+top+" bot "+bottom);
-//                setHeight(bottom);
-//            }
-//        });
+        notify = false;
     }
+
+
 
     public void setDetails(final Event event, int position) {
         this.position = position;
@@ -125,38 +134,62 @@ public class EventHolder extends RecyclerView.ViewHolder {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                Log.d("changer3",event.getTitle()+" "+card.getMyheight());
                 sizeChanged();
             }
         });
         eventDescription.loadData(event.getDescription(),"text/html","UTF-8");
+        notifyText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (notify) {
+                    MainActivity.manualCancelSub(event);
+                } else {
+                    MainActivity.manualAddSub(event);
+                }
+                swipeRevealLayout.close(true);
+                notify = !notify;
+            }
+        });
+        swipeRevealLayout.setSwipeListener(new SwipeRevealLayout.SwipeListener() {
+            @Override
+            public void onClosed(SwipeRevealLayout view) {
+                changeNotifyText();
+            }
 
-//        card.requestLayout();
-//        Log.i("tagtest", itView.getTag().toString()+" "+getAdapterPosition());
-////        itView.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
-//        swipeRevealLayout.measure(SwipeRevealLayout.MeasureSpec.UNSPECIFIED,SwipeRevealLayout.MeasureSpec.UNSPECIFIED);
-//        ViewGroup.LayoutParams linParams =   swipedLayout.getLayoutParams();
-//        linParams.height = card.getMeasuredHeight();
-//        Log.i("height",getAdapterPosition()+" "+event.getTitle()+" "+card.getHeight()+" "+card.getMeasuredHeight()+" "+itView.getMeasuredHeight()+" "+itView.getHeight());
-//        swipedLayout.setLayoutParams(linParams);
+            @Override
+            public void onOpened(SwipeRevealLayout view) {
+
+            }
+
+            @Override
+            public void onSlide(SwipeRevealLayout view, float slideOffset) {
+
+            }
+        });
+        notify = MainActivity.getSubList().contains(event);
     }
 
-//    public SwipeRevealLayout getSwipeRevealLayout() {
-//        return swipeRevealLayout;
-//    }
+    private void changeNotifyText() {
+        if (notify) {
+            notifyText.setText("Cancel\n Notification");
+            notifyText.setBackgroundColor(Color.RED);
+        } else {
+            notifyText.setText("Add\n Notification");
+            notifyText.setBackgroundColor(App.getApplication().getResources().getColor(R.color.colorPrimary));
+        }
+    }
+
+    public void close() {
+        swipeRevealLayout.close(true);
+    }
+
 
     public SuperSwipeRevealLayout getSwipeRevealLayout() {
         return swipeRevealLayout;
     }
 
     public void sizeChanged() {
-//        swipeRevealLayout.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
-//        swipeRevealLayout.getChildAt(0).measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
-//        swipeRevealLayout.getChildAt(1).measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
-//        ViewGroup.LayoutParams cardParams = swipeRevealLayout.getChildAt(1).getLayoutParams();
         ViewGroup.LayoutParams linearParams = swipeRevealLayout.getChildAt(0).getLayoutParams();
-//        Log.d("params",swipeRevealLayout.getChildAt(0).getTag().toString()+" "+linearParams.height+" "+swipeRevealLayout.getChildAt(1).getTag().toString()+" "+cardParams.height);
-        Log.d("params",""+swipeRevealLayout.getMeasuredHeight());
         linearParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
         swipeRevealLayout.getChildAt(0).setLayoutParams(linearParams);
     }

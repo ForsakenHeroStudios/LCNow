@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Group> allGroups, groupsToShow;
     private static ArrayList<Event> eventArrayList;
     public static ArrayList<Event> manualSubs;
-    private ArrayList<Event> subList;
+    private static ArrayList<Event> subList;
     private static ArrayList<Event> eventArrayListToShow;
     // calendar to select events occurring on a certain day that the user would like to be shown
     private CalendarView calendarView;
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
     private NavigationView navigationView;
     LinearLayoutManager linearLayoutManager;
 
-    private SQLiteDatabase db;
+    private static SQLiteDatabase db;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -95,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
             return setSelectedView(item);
         }
     };
+    private static Toolbar toolbar;
 
     // for more good stuff with eventRecyclerView: https://medium.com/@droidbyme/android-recyclerview-fca74609725e
 
@@ -105,21 +106,32 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         db = this.openOrCreateDatabase("Subscriptions", MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS subs (groups VARCHAR, filters VARCHAR, id INTEGER PRIMARY KEY)");
-        Cursor c = db.rawQuery("SELECT * FROM subs", null);
-        int groupsIndex = c.getColumnIndex("groups");
-        int filtersIndex = c.getColumnIndex("filters");
-        int idIndex = c.getColumnIndex("id");
-        c.moveToFirst();
-        while (!c.isAfterLast()) {
-            Log.i("group", "" + c.getString(groupsIndex));
-            Log.i("filter", "" + c.getString(filtersIndex));
-            c.moveToNext();
+        Cursor groupsCursor = db.rawQuery("SELECT * FROM subs", null);
+        int groupsIndex = groupsCursor.getColumnIndex("groups");
+        int filtersIndex = groupsCursor.getColumnIndex("filters");
+        int idIndex = groupsCursor.getColumnIndex("id");
+        groupsCursor.moveToFirst();
+        while (!groupsCursor.isAfterLast()) {
+            Log.i("group", "" + groupsCursor.getString(groupsIndex));
+            Log.i("filter", "" + groupsCursor.getString(filtersIndex));
+            groupsCursor.moveToNext();
         }
-        c.close();
+        groupsCursor.close();
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS manuals (events INTEGER, id INTEGER PRIMARY KEY)");
+        Cursor manualCursor = db.rawQuery("SELECT * FROM manuals", null);
+        int eventIndex = manualCursor.getColumnIndex("events");
+        int idIndex2 = manualCursor.getColumnIndex("id");
+        manualCursor.moveToFirst();
+        while (!manualCursor.isAfterLast()) {
+            Log.i("manualdb",""+manualCursor.getInt(eventIndex));
+            manualCursor.moveToNext();
+        }
+        manualCursor.close();
 
         linearLayoutManager = new LinearLayoutManager(this);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         android.support.v7.app.ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -327,9 +339,40 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case android.R.id.home:
                 drawerLayout.openDrawer(GravityCompat.START);
+                for (EventHolder holder : eventAdapter.getViewHolders()) {
+                    holder.close();
+                }
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public static void manualAddSub(Event e) {
+        if (manualSubs.contains(e)) {
+            return;
+        }
+        manualSubs.add(e);
+        if (!subList.contains(e)) {
+            subList.add(e);
+        }
+        db.execSQL("INSERT INTO manuals (events) VALUES ('"+e.hashCode()+"')");
+        Log.i("manualdb","added "+e.getTitle());
+        createEventNotification(e);
+    }
+
+    public static void manualCancelSub(Event e) {
+        manualSubs.remove(e);
+        subList.remove(e);
+        db.execSQL("DELETE FROM manuals WHERE events = "+e.hashCode());
+        cancelEventNotification(e);
+        if (toolbar.getTitle().equals("Current Subscribed Events")) {
+            eventArrayListToShow.remove(e);
+        }
+        eventAdapter.notifyDataSetChanged();
+    }
+
+    public static ArrayList<Event> getSubList() {
+        return subList;
     }
 
 
@@ -400,12 +443,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void addEventsToSubList() {
         ArrayList<String> groupsSubbed = new ArrayList<>();
-        Cursor c = db.rawQuery("SELECT * FROM subs", null);
-        int groupsIndex = c.getColumnIndex("groups");
-        int filtersIndex = c.getColumnIndex("filters");
-        c.moveToFirst();
-        while (!c.isAfterLast()) {
-            String group = c.getString(groupsIndex);
+        Cursor groupsCursor = db.rawQuery("SELECT * FROM subs", null);
+        int groupsIndex = groupsCursor.getColumnIndex("groups");
+        int filtersIndex = groupsCursor.getColumnIndex("filters");
+        groupsCursor.moveToFirst();
+        while (!groupsCursor.isAfterLast()) {
+            String group = groupsCursor.getString(groupsIndex);
             if (group != null) {
                 groupsSubbed.add(group);
                 for (Group g : allGroups) {
@@ -416,7 +459,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-            c.moveToNext();
+            groupsCursor.moveToNext();
         }
         for (String g : groupsSubbed) {
             for (Event e : SplashActivity.result) {
@@ -425,10 +468,30 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         Log.i("subbedEvents", "num: " + subList.size());
-        c.close();
+        groupsCursor.close();
+        Cursor manualCursor = db.rawQuery("SELECT * FROM manuals",null);
+        int eventIndex = manualCursor.getColumnIndex("events");
+        manualCursor.moveToFirst();
+        ArrayList<Integer> eventHashes = new ArrayList<>();
+        while (!manualCursor.isAfterLast()) {
+            eventHashes.add(manualCursor.getInt(eventIndex));
+            manualCursor.moveToNext();
+        }
+        manualCursor.close();
+        Log.i("manualdb","num manuals: "+eventHashes.size());
+        for (Event e : eventArrayList) {
+            if (eventHashes.isEmpty()) {
+                break;
+            }
+            if (eventHashes.contains(e.hashCode())) {
+                subList.add(e);
+                manualSubs.add(e);
+                eventHashes.remove((Integer)e.hashCode());
+            }
+        }
     }
 
-    private void createEventNotification(Event event) {
+    public static void createEventNotification(Event event) {
         int requestID = event.hashCode();
         Calendar calendar = Calendar.getInstance();
         String time = event.getTime();
@@ -461,7 +524,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void cancelEventNotification(Event event) {
+    private static void cancelEventNotification(Event event) {
         int requestID = event.hashCode();
         Intent intent = new Intent(App.getContext(), EventNotificationReceiver.class);
         intent.putExtra("title", event.getTitle());
@@ -512,9 +575,7 @@ public class MainActivity extends AppCompatActivity {
      * Populates event array
      */
     private void createListData() {
-        for (Event e : SplashActivity.result) {
-            eventArrayList.add(e);
-        }
+        eventArrayList.addAll(SplashActivity.result);
         createEventsToShow();
     }
 
@@ -629,20 +690,20 @@ public class MainActivity extends AppCompatActivity {
         return super.onKeyUp(keyCode, keyEvent);
     }
 
-//    @Override
-//    protected void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        if (eventAdapter != null) {
-//            eventAdapter.saveStates(outState);
-//        }
-//    }
-//
-//    @Override
-//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//        super.onRestoreInstanceState(savedInstanceState);
-//        if (eventAdapter != null) {
-//            eventAdapter.restoreStates(savedInstanceState);
-//        }
-//    }
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (eventAdapter != null) {
+            eventAdapter.saveStates(outState);
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (eventAdapter != null) {
+            eventAdapter.restoreStates(savedInstanceState);
+        }
+    }
 
 }

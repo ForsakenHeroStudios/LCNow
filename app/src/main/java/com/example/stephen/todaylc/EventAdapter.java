@@ -68,22 +68,12 @@ public class EventAdapter extends RecyclerView.Adapter<EventHolder> {
     }
 
 
-
     @Override
     public void onBindViewHolder(@NonNull final EventHolder holder, final int position) {
         final Event event = events.get(position);
         holder.setDetails(event, position);
         eventDict.put(event,holder);
-//        viewBinderHelper.bind(holder.swipeRevealLayout,event.toString());
-        //TODO: still gets wrong height but this is the closest I've gotten...
-//        holder.itemView.post(new Runnable() {
-//            @Override
-//            public void run() {
-//                Log.d("testrun", ""+holder.getCard().getMeasuredHeight());
-////                holder.setHeight(holder.getCard().getMeasuredHeight());
-//            }
-//        });
-
+        viewBinderHelper.bind(holder.getSwipeRevealLayout(),event.toString());
 //        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
 //            @Override
 //            public boolean onLongClick(View view) {
@@ -125,36 +115,19 @@ public class EventAdapter extends RecyclerView.Adapter<EventHolder> {
 //                return true;
 //            }
 //        });
-
     }
-
-//    @Override
-//    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
-//        super.onAttachedToRecyclerView(recyclerView);
-//        recyclerView.getAdapter().get
-//    }
-
-
-
-
-//    @Override
-//    public void onViewAttachedToWindow(@NonNull EventHolder holder) {
-//        super.onViewAttachedToWindow(holder);
-//        holder.itemView.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
-//        int height = holder.getCard().getMeasuredHeight();
-//        holder.setHeight(height);
-//    }
 
     @Override
     public int getItemCount() {
         return events.size();
     }
 
-//    public void saveStates(Bundle outState) {
-//        viewBinderHelper.saveStates(outState);
-//    }
-//
-//    public void restoreStates(Bundle inState) {
-//        viewBinderHelper.restoreStates(inState);
-//    }
+    public void saveStates(Bundle outState) {
+        viewBinderHelper.saveStates(outState);
+    }
+
+    public void restoreStates(Bundle inState) {
+        viewBinderHelper.restoreStates(inState);
+    }
+
 }
