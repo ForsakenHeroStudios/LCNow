@@ -2,7 +2,6 @@
 An events app for Lewis and Clark College with other helpful features
 
 Current functionality
-- Currently exists solely in Android form.
 - Pulls events from LC events calendar. Exposed LiveWhale API helped tremendously with formatting.
 - Each event displays its title, date, start and end time, location, description, and image (as available).
 - Can display events for any day (with selection of day using a calendar view).
@@ -33,7 +32,6 @@ Next steps
 - Some assistance with major/class schedule planning could be helpful as well.
 - Integrate Moodle, Canvas? Some other service used by professors?
 - Let students create personal reminders, goals within the app, to be used as a planner as well?
-- Make it work on iOS...
 - Add a schedule for various locations on campus in use (gym, library rooms, classrooms) as well as a way to "reserve" them. Perhaps have the user enter where they are currently working, then have a persistent notification in the notification center that the user can tap on to say they leave/are done.
 - Have SQRC hours/who is currently working along with what they can help you with.
 - Perhaps have a section where people ask questions about stuff and someone can answer (people who answer are awarded Pio Points...?)
