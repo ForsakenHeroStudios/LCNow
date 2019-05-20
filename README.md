@@ -1,4 +1,8 @@
 # LC Now
+
+## Project has been moved to Flutter.
+See [this](https://github.com/ForsakenHeroStudios/OneLCFlutter) repository for the active development of the project.
+
 An events app for Lewis and Clark College with other helpful features
 
 Current functionality
